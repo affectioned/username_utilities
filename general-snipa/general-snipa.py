@@ -160,8 +160,7 @@ if __name__ == "__main__":
     usernames = read_usernames_from_file(file_name)
 
     max_workers = 2
-
-    # If `&displayName=` should be the same as `&username=`
+    
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         executor.map(
             lambda user: check(user, url_format, detection_type, user),
