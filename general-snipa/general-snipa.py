@@ -68,11 +68,12 @@ def check(user, url_format, detection_type, *additional_args):
             page_content = page.content()
 
             if detection_type in page_content:
-                print(f"[+] Available {user} at {url}")
+                winsound.Beep(100, 100)
+                print(f"[+] Available {user}")
                 with open("hits.txt", "a", encoding="utf-8") as f:
-                    f.write(f"{user} | Available at {url}\n")
+                    f.write(f"{user} | Available \n")
             else:
-                print(f"[-] Taken {user} at {url}")
+                print(f"[-] Taken {user}")
 
         except Exception as e:
             time.sleep(15)
