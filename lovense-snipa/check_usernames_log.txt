@@ -1,3 +1,0 @@
-Username 'currency' is available.
-Username 'effort' is available.
-Username 'academy' is available.
