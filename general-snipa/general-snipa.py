@@ -138,7 +138,7 @@ def read_usernames_from_file(filename):
         return [username.strip().lower() for username in usernames if len(username.strip()) >= 3 and re.match("^[A-Za-z]+$", username.strip())]
     except FileNotFoundError:
         print(f"File '{filename}' not found. Generating random usernames.")
-        return [generate_random_username(8) for _ in range(1)]
+        return [generate_random_username(3) for _ in range(500)]
 
 
 # Main script execution
