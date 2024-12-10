@@ -551,3 +551,10 @@ aficionado | Available at https://passport.mpsdk.easebar.com/oauth/register/emai
 cynophile | Available at https://passport.mpsdk.easebar.com/oauth/register/email/check_account_name?lang=en_US
 camaraderie | Available at https://passport.mpsdk.easebar.com/oauth/register/email/check_account_name?lang=en_US
 reverence | Available at https://passport.mpsdk.easebar.com/oauth/register/email/check_account_name?lang=en_US
+philomathy | Available at https://api.mojang.com/users/profiles/minecraft/philomathy
+pseudoheart | Available at https://api.mojang.com/users/profiles/minecraft/pseudoheart
+neurotrophins | Available at https://api.mojang.com/users/profiles/minecraft/neurotrophins
+nonmodern | Available at https://api.mojang.com/users/profiles/minecraft/nonmodern
+richardsonian | Available at https://api.mojang.com/users/profiles/minecraft/richardsonian
+marketplace | Available at https://steamcommunity.com/id/marketplace
+depression | Available at https://steamcommunity.com/id/depression

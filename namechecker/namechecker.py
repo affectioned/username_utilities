@@ -35,8 +35,7 @@ def parse_cookies(file_path):
                 })
     return cookies
 
-
-def check(user, url_format, detection_type, *additional_args):
+def check(user, url_format, detection_type, current_index, total_count, *additional_args):
     with sync_playwright() as p:
         # Set headless=False for visible browser
         browser = p.chromium.launch(headless=True)
@@ -53,11 +52,11 @@ def check(user, url_format, detection_type, *additional_args):
 
             if detection_type in page_content:
                 winsound.Beep(100, 100)
-                print(f"[+] Available: {user} at {url}")
+                print(f"[{current_index + 1}/{total_count} | {((current_index + 1) / total_count) * 100:.2f}%] [+] Available: {user} at {url}")
                 with open("hits.txt", "a", encoding="utf-8") as f:
                     f.write(f"{user} | Available at {url}\n")
             else:
-                print(f"[-] Taken: {user}")
+                print(f"[{current_index + 1}/{total_count} | {((current_index + 1) / total_count) * 100:.2f}%] [-] Taken: {user}")
 
         except Exception as e:
             time.sleep(15)
@@ -150,8 +149,15 @@ if __name__ == "__main__":
 
     max_workers = 12
 
+    total_count = len(usernames)
+
+    # Prepare the data with indexes
+    indexed_usernames = [(index, user) for index, user in enumerate(usernames)]
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         executor.map(
-            lambda user: check(user, url_format, detection_type, user),
-            usernames
+            lambda args: check(
+                args[1], url_format, detection_type, args[0], total_count
+            ),
+            indexed_usernames
         )
