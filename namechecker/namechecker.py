@@ -147,7 +147,7 @@ if __name__ == "__main__":
         "Enter the filename with usernames (e.g., usernames.txt): ")
     usernames = read_usernames_from_file(file_name)
 
-    max_workers = 12
+    max_workers = 2
 
     total_count = len(usernames)
 
@@ -157,7 +157,7 @@ if __name__ == "__main__":
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         executor.map(
             lambda args: check(
-                args[1], url_format, detection_type, args[0], total_count
+                args[1], url_format, detection_type, args[0], total_count, args[1]
             ),
             indexed_usernames
         )
