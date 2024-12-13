@@ -764,3 +764,20 @@ expects | Available at https://api.vrchat.cloud/api/1/auth/exists?username=expec
 fabrics | Available at https://api.vrchat.cloud/api/1/auth/exists?username=fabrics&displayName=fabrics
 indices | Available at https://api.vrchat.cloud/api/1/auth/exists?username=indices&displayName=indices
 earliest | Available at https://api.vrchat.cloud/api/1/auth/exists?username=earliest&displayName=earliest
+victorian | Available at https://fortnitetracker.com/profile/all/victorian
+haunted | Available at https://fortnitetracker.com/profile/all/haunted
+supernatural | Available at https://fortnitetracker.com/profile/all/supernatural
+baroque | Available at https://fortnitetracker.com/profile/all/baroque
+ghoulish | Available at https://fortnitetracker.com/profile/all/ghoulish
+spire | Available at https://fortnitetracker.com/profile/all/spire
+contemporary
+cathedral | Available at https://fortnitetracker.com/profile/all/cathedral
+architecture | Available at https://fortnitetracker.com/profile/all/architecture
+lect | Available at https://fortnitetracker.com/profile/all/lect
+
+nonmodern | Available at https://fortnitetracker.com/profile/all/nonmodern
+folk | Available at https://fortnitetracker.com/profile/all/folk
+romance | Available at https://fortnitetracker.com/profile/all/romance
+moorish | Available at https://fortnitetracker.com/profile/all/moorish
+century | Available at https://fortnitetracker.com/profile/all/century
+frieze | Available at https://fortnitetracker.com/profile/all/frieze
