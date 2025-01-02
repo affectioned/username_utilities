@@ -84,6 +84,7 @@ def select_url_format():
     [12] Minecraft
     [13] Github
     [14] Epic Games (Fortnite)
+    [15] Xbox
     [0] Exit
     """)
 
@@ -117,6 +118,8 @@ def select_url_format():
         return 'https://www.github.com/{}', "This is not the web page you are looking for"
     elif choice == '14':
         return 'https://fortnitetracker.com/profile/search?q={}', "We are unable to find your profile"
+    elif choice == '15':
+        return 'https://xboxgamertag.com/search/{}', "Gamertag doesn't exist"
     elif choice == "0":
         print("Exiting...")
         exit(0)

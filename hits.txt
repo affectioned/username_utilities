@@ -841,3 +841,9 @@ latinism | Available at https://www.github.com/latinism
 latinize | Available at https://www.github.com/latinize
 europeanism | Available at https://www.github.com/europeanism
 camouflanguage | Available at https://www.github.com/camouflanguage
+copyright | Available at https://xboxgamertag.com/search/copyright
+resources | Available at https://xboxgamertag.com/search/resources
+microsoft | Available at https://xboxgamertag.com/search/microsoft
+goblin | Available at https://xboxgamertag.com/search/goblin
+goblin | Available at https://xboxgamertag.com/search/goblin
+abuser | Available at https://xboxgamertag.com/search/abuser
