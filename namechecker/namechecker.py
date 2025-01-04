@@ -13,11 +13,9 @@ from playwright_stealth import stealth_sync
 def generate_random_username(length):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
-
-# Function to parse cookies from a Netscape-formatted cookies.txt file
 def parse_cookies(file_path):
     cookies = []
-    with open(file_path, "r") as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         for line in f:
             # Skip comments and blank lines
             if line.startswith("#") or not line.strip():
@@ -25,29 +23,64 @@ def parse_cookies(file_path):
             parts = line.strip().split("\t")
             if len(parts) >= 7:
                 cookies.append({
-                    "name": parts[5],
-                    "value": parts[6],
-                    "domain": parts[0],
-                    "path": parts[2],
-                    "secure": parts[3].lower() == "true",
-                    "httpOnly": False,  # Assume httpOnly is False unless specified
-                    "sameSite": "None"  # Adjust if necessary
+                    "name": parts[5],                # Cookie name
+                    "value": parts[6],               # Cookie value
+                    "domain": parts[0],              # Domain
+                    "path": parts[2],                # Path
+                    "secure": parts[3].lower() == "true",  # Secure flag
+                    "expires": int(parts[4]) if parts[4].isdigit() else None,  # Expiry timestamp
+                    "httpOnly": False,               # Assume httpOnly is False unless specified
+                    "sameSite": "None"               # Adjust if necessary
                 })
     return cookies
+
+def add_cookies(context, url_format):
+    # Define cookie configurations for supported websites
+    cookie_config = {
+        "www.instagram.com": os.path.join(os.path.dirname(__file__), "instagram", "cookies.txt"),
+        "www.x.com": os.path.join(os.path.dirname(__file__), "x", "cookies.txt"),
+    }
+
+    for site, path in cookie_config.items():
+        if site in url_format:
+            try:
+                cookies = parse_cookies(path)
+                context.add_cookies(cookies)
+            except FileNotFoundError:
+                print(f"[!] Cookies file not found for {site}: {path}. Proceeding without cookies.")
+            except Exception as e:
+                print(f"[!] Error loading cookies for {site}: {e}")
+            break
+
+def create_context_with_language(browser, language="en-US"):
+    return browser.new_context(
+        extra_http_headers={"Accept-Language": language}
+    )
+
+def generate_dot_variations(word):
+    variations = []
+    for i in range(1, len(word)):  # Start from index 1 and stop before the last character
+        variations.append(word[:i] + '.' + word[i:])
+    return variations
 
 def check(user, url_format, detection_type, current_index, total_count, *additional_args):
     with sync_playwright() as p:
         # Set headless=False for visible browser
         browser = p.chromium.launch(headless=True)
-        context = browser.new_context()
+        context = create_context_with_language(browser, language="en-US")
+
+        # print(url_format)
+
+        add_cookies(context, url_format)
+
         page = context.new_page()
 
         # Optional: Use stealth to mimic real browser behavior
         stealth_sync(page)
 
         try:
-            url = url_format.format(user, *additional_args)
-            page.goto(url, timeout=60000, wait_until="domcontentloaded")
+            url = url_format.format(user, *additional_args) + "?hl=en"
+            page.goto(url, timeout=60000, wait_until="load")
             page_content = page.content()
 
             if detection_type in page_content:
@@ -64,7 +97,6 @@ def check(user, url_format, detection_type, current_index, total_count, *additio
 
         # Close the browser after use
         browser.close()
-
 
 # Function to select URL format and detection type
 def select_url_format():
@@ -140,7 +172,7 @@ def read_usernames_from_file(filename):
         return [username.strip().lower() for username in usernames if len(username.strip()) >= 3 and re.match("^[A-Za-z]+$", username.strip())]
     except FileNotFoundError:
         print(f"File '{filename}' not found. Generating random usernames.")
-        return [generate_random_username(3) for _ in range(500)]
+        return [generate_random_username(4) for _ in range(500)]
 
 
 # Main script execution
@@ -154,13 +186,29 @@ if __name__ == "__main__":
 
     total_count = len(usernames)
 
+    # Ask the user if they want to check with dot variations
+    check_variations = input("Do you want to check with dot variations? (yes/no): ").strip().lower()
+    if check_variations not in ["yes", "no", "y", "n"]:
+        print("Invalid input. Please type 'yes' or 'no'.")
+        exit()
+
+    # Function to handle checking usernames with or without variations
+    def process_username(index, username, total_count):
+        if check_variations in ["yes", "y"]:
+            # Generate and check dot variations
+            variations = generate_dot_variations(username)
+            for variation in variations:
+                check(variation, url_format, detection_type, index, total_count, variation)
+        else:
+            # Check only the original username
+            check(username, url_format, detection_type, index, total_count, username)
+
     # Prepare the data with indexes
     indexed_usernames = [(index, user) for index, user in enumerate(usernames)]
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         executor.map(
-            lambda args: check(
-                args[1], url_format, detection_type, args[0], total_count, args[1]
-            ),
+            lambda args: process_username(args[0], args[1], total_count),
             indexed_usernames
         )
+
