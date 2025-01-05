@@ -27,14 +27,24 @@ if not usernames:
 # File to log available usernames
 available_usernames_file = os.path.join(script_dir, "available_usernames.txt")
 
+# Enhanced headers to mimic Discord client behavior
+headers = {
+    "Content-Type": "application/json",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+    "X-Super-Properties": (
+        "eyJvcyI6IldpbmRvd3MiLCJvc192ZXJzaW9uIjoiMTAuMC4wIiwibG9jYWxlIjoiZW4tVVMiLCJjbGllbnRfYnVp"
+        "bGRfbnVtYmVyIjoxMjI0MDEsImNsaWVudF92ZXJzaW9uIjoiMTE1LjAuMCIsIm9zX2FyY2hpdGVjdHVyZSI6e30sImNsa"
+        "WVudF9ldmVudF9zb3VyY2UiOm51bGx9"
+    ),
+    "Origin": "https://discord.com",
+    "Referer": "https://discord.com/register",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Connection": "keep-alive",
+}
+
 # Function to check username availability
 def check_username(username):
     payload = {"username": username}
-    headers = {
-        "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36"
-    }
-    
     try:
         response = requests.post(URL, json=payload, headers=headers)
         if response.status_code == 429:  # Rate limited
@@ -57,14 +67,13 @@ def check_username(username):
         print(f"Error checking username '{username}': {e}")
     return None
 
-# Process usernames at a rate of 2 per second and save available usernames
+# Process usernames and save available usernames
 available_usernames = []
-for i, username in enumerate(usernames):
+for username in usernames:
     available = check_username(username)
     if available:
         available_usernames.append(available)
-    if (i + 1) % 2 == 0:  # Pause after every 2 requests
-        time.sleep(1)
+    time.sleep(2)  # Pause for 2 seconds after every request
 
 # Save available usernames to a file
 if available_usernames:

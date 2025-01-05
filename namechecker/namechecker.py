@@ -79,7 +79,7 @@ def check(user, url_format, detection_type, current_index, total_count, *additio
         stealth_sync(page)
 
         try:
-            url = url_format.format(user, *additional_args) + "?hl=en"
+            url = url_format.format(user, *additional_args)
             page.goto(url, timeout=60000, wait_until="load")
             page_content = page.content()
 
@@ -117,6 +117,7 @@ def select_url_format():
     [13] Github
     [14] Epic Games (Fortnite)
     [15] Xbox
+    [16] Roblox
     [0] Exit
     """)
 
@@ -152,6 +153,8 @@ def select_url_format():
         return 'https://fortnitetracker.com/profile/search?q={}', "We are unable to find your profile"
     elif choice == '15':
         return 'https://xboxgamertag.com/search/{}', "Gamertag doesn't exist"
+    elif choice == '16':
+        return 'https://auth.roblox.com/v1/usernames/validate?request.username={}&request.birthday=2002-09-09', "Username is valid"
     elif choice == "0":
         print("Exiting...")
         exit(0)
@@ -172,7 +175,7 @@ def read_usernames_from_file(filename):
         return [username.strip().lower() for username in usernames if len(username.strip()) >= 3 and re.match("^[A-Za-z]+$", username.strip())]
     except FileNotFoundError:
         print(f"File '{filename}' not found. Generating random usernames.")
-        return [generate_random_username(4) for _ in range(500)]
+        return [generate_random_username(8) for _ in range(1)]
 
 
 # Main script execution
