@@ -8,10 +8,22 @@ import concurrent.futures
 from playwright.sync_api import sync_playwright
 from playwright_stealth import stealth_sync
 
-
-# Function to generate a random 8-character username
 def generate_random_username(length):
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+    if length < 1:
+        raise ValueError("Length must be at least 1")
+
+    # Ensure at least one letter
+    guaranteed_letter = random.choice(string.ascii_lowercase)
+    
+    # Generate the rest of the username
+    remaining_length = length - 1
+    remaining_characters = ''.join(random.choices(string.ascii_lowercase + string.digits, k=remaining_length))
+    
+    # Combine the guaranteed letter with the rest and shuffle
+    username = guaranteed_letter + remaining_characters
+    username = ''.join(random.sample(username, len(username)))  # Shuffle to randomize position
+    
+    return username
 
 def parse_cookies(file_path):
     cookies = []
@@ -41,8 +53,10 @@ def add_cookies(context, url_format):
         "www.x.com": os.path.join(os.path.dirname(__file__), "x", "cookies.txt"),
     }
 
-    for site, path in cookie_config.items():
+    # Extract domain from the URL
+    for site in cookie_config:
         if site in url_format:
+            path = cookie_config[site]
             try:
                 cookies = parse_cookies(path)
                 context.add_cookies(cookies)
@@ -50,11 +64,13 @@ def add_cookies(context, url_format):
                 print(f"[!] Cookies file not found for {site}: {path}. Proceeding without cookies.")
             except Exception as e:
                 print(f"[!] Error loading cookies for {site}: {e}")
-            break
+            return
 
-def create_context_with_language(browser, language="en-US"):
+
+def create_context_with_language(browser, language="en-US,en;q=0.9"):
     return browser.new_context(
-        extra_http_headers={"Accept-Language": language}
+        extra_http_headers={"Accept-Language": language},
+        java_script_enabled=False
     )
 
 def generate_variations(word, character):
@@ -65,23 +81,29 @@ def generate_variations(word, character):
 
 def check(user, url_format, detection_type, current_index, total_count, *additional_args):
     with sync_playwright() as p:
-        # Set headless=False for visible browser
         browser = p.chromium.launch(headless=True)
-        context = create_context_with_language(browser, language="en-US")
-
-        # print(url_format)
+        context = create_context_with_language(browser)
 
         add_cookies(context, url_format)
 
         page = context.new_page()
 
-        # Optional: Use stealth to mimic real browser behavior
+        # Block non-essential resources
+        page.route("**/*", lambda route, request: 
+                   route.abort() if request.resource_type != "document" else route.continue_())
+
         stealth_sync(page)
 
         try:
             url = url_format.format(user, *additional_args)
             page.goto(url, timeout=60000, wait_until="load")
             page_content = page.content()
+
+            #with open("page_content.html", "w", encoding="utf-8") as file:
+            #    file.write(page_content)
+            #print("Content saved to page_content.html")
+
+            #input("Press Enter to continue...")
 
             if detection_type in page_content:
                 winsound.Beep(100, 100)
@@ -98,66 +120,46 @@ def check(user, url_format, detection_type, current_index, total_count, *additio
         # Close the browser after use
         browser.close()
 
-# Function to select URL format and detection type
 def select_url_format():
-    print("""
-    Choose a platform to check usernames:
-    [1] Steam
-    [2] Bluesky
-    [3] VRChat
-    [4] Twitch
-    [5] Snapchat
-    [6] SoundCloud
-    [7] Apple Music
-    [8] X (FEED IT COOKIES)
-    [9] Steam Groups
-    [10] YouTube (FEED IT COOKIES)
-    [11] Instagram (FEED IT COOKIES)
-    [12] Minecraft
-    [13] Github
-    [14] Epic Games (Fortnite)
-    [15] Xbox
-    [16] Roblox
-    [0] Exit
-    """)
+    # Define platforms, URL formats, and detection types in a dictionary
+    platforms = {
+        "steam": ("Steam", "https://steamcommunity.com/id/{}", "The specified profile could not be found"),
+        "bluesky": ("Bluesky", "https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle={}.bsky.social", "Unable to resolve handle"),
+        "vrchat": ("VRChat", "https://api.vrchat.cloud/api/1/auth/exists?username={}&displayName=", '"userExists":false'),
+        "twitch": ("Twitch", "https://www.twitch.tv/{}", "Sorry. Unless you've got a time machine, that content is unavailable"),
+        "snapchat": ("Snapchat", "https://www.snapchat.com/add/{}", "This content was not found"),
+        "soundcloud": ("SoundCloud", "https://soundcloud.com/{}", "We can’t find that user."),
+        "apple_music": ("Apple Music", "https://music.apple.com/profile/{}", "The page you're looking for can't be found."),
+        "x": ("X (Feed it Cookies)", "https://x.com/{}", "This account doesn’t exist"),
+        "steam_groups": ("Steam Groups", "https://steamcommunity.com/groups/{}", "No group could be retrieved for the given URL."),
+        "youtube": ("YouTube (Feed it Cookies)", "https://www.youtube.com/@{}", "error?src=404&amp"),
+        "instagram": ("Instagram (Feed it Cookies)", "https://www.instagram.com/{}", "Sorry, this page isn't available."),
+        "minecraft": ("Minecraft", "https://api.mojang.com/users/profiles/minecraft/{}", "Couldn't find any profile with name"),
+        "github": ("Github", "https://www.github.com/{}", "This is not the web page you are looking for"),
+        "epic_games": ("Epic Games (Fortnite)", "https://fortnitetracker.com/profile/search?q=", "We are unable to find your profile"),
+        "xbox": ("Xbox", "https://xboxgamertag.com/search/{}", "Gamertag doesn't exist"),
+        "roblox": ("Roblox", "https://auth.roblox.com/v1/usernames/validate?request.username={}&request.birthday=2002-09-09", "Username is valid"),
+        "pinterest": ("Pinterest", "https://www.pinterest.com/{}", '!--><template id="B:0"></template><!--/$--><!--$--><title></title'),
+        "exit": ("Exit", None, None)
+    }
 
-    choice = input("Enter your choice (1, 2, or 0 to exit): ")
+    # Print menu dynamically
+    print("\nChoose a platform to check usernames:")
+    for key, (name, _, _) in platforms.items():
+        print(f"[{key}] {name}")
 
-    if choice == "1":
-        return 'https://steamcommunity.com/id/{}', "The specified profile could not be found"
-    elif choice == "2":
-        return 'https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle={}.bsky.social', "Unable to resolve handle"
-    elif choice == "3":
-        return 'https://api.vrchat.cloud/api/1/auth/exists?username={}&displayName={}', '"userExists":false'
-    elif choice == "4":
-        return 'https://www.twitch.tv/{}', "Sorry. Unless you've got a time machine, that content is unavailable"
-    elif choice == "5":
-        return 'https://www.snapchat.com/add/{}', "This content was not found"
-    elif choice == '6':
-        return 'https://soundcloud.com/{}', "We can’t find that user."
-    elif choice == '7':
-        return 'https://music.apple.com/profile/{}', "The page you're looking for can't be found."
-    elif choice == '8':
-        return 'https://x.com/{}', "This account doesn’t exist"
-    elif choice == '9':
-        return 'https://steamcommunity.com/groups/{}', "No group could be retrieved for the given URL."
-    elif choice == '10':
-        return 'https://www.youtube.com/@{}', "error?src=404&amp"
-    elif choice == '11':
-        return 'https://www.instagram.com/{}', "Sorry, this page isn't available."
-    elif choice == '12':
-        return 'https://api.mojang.com/users/profiles/minecraft/{}', "Couldn't find any profile with name"
-    elif choice == '13':
-        return 'https://www.github.com/{}', "This is not the web page you are looking for"
-    elif choice == '14':
-        return 'https://fortnitetracker.com/profile/search?q={}', "We are unable to find your profile"
-    elif choice == '15':
-        return 'https://xboxgamertag.com/search/{}', "Gamertag doesn't exist"
-    elif choice == '16':
-        return 'https://auth.roblox.com/v1/usernames/validate?request.username={}&request.birthday=2002-09-09', "Username is valid"
-    elif choice == "0":
+    # Get user input
+    choice = input("\nEnter your choice (e.g., steam, bluesky, or exit to exit): ").lower()
+
+    # Handle exit case
+    if choice == "exit":
         print("Exiting...")
         exit(0)
+
+    # Validate user input
+    if choice in platforms:
+        _, url_format, detection_type = platforms[choice]
+        return url_format, detection_type
     else:
         print("Invalid choice. Please try again.")
         return select_url_format()  # Recursively ask again
@@ -166,7 +168,7 @@ def select_url_format():
 # Read usernames from a file or generate random ones
 def read_usernames_from_file(filename):
     script_directory = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(script_directory, filename)
+    file_path = os.path.join(script_directory, "wordlists", filename)
 
     try:
         with open(file_path, "r", encoding="utf-8") as file:
@@ -180,8 +182,9 @@ def read_usernames_from_file(filename):
 
 
 if __name__ == "__main__":
-    # User input for URL format and detection type
     url_format, detection_type = select_url_format()
+    print(f"Selected URL: {url_format}")
+    print(f"Detection Type: {detection_type}")
 
     # File input and username loading
     file_name = input("Enter the filename with usernames (e.g., usernames.txt): ").strip()
@@ -196,7 +199,6 @@ if __name__ == "__main__":
     if "roblox" in url_format:
         variation = "_"
 
-    # Check with variations or not
     check_variations = input("Do you want to check with platform-supported variations? (y/n): ").strip().lower()
     if check_variations not in ["yes", "no", "y", "n"]:
         print("Invalid input. Please type 'yes' or 'no'.")
