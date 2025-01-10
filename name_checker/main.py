@@ -47,10 +47,13 @@ def parse_cookies(file_path):
     return cookies
 
 def add_cookies(context, url_format):
-    # Define cookie configurations for supported websites
+    # Define the base directory for the cookies
+    base_cookies_dir = os.path.join(os.path.dirname(__file__), "put_cookies_here")
+
+    # Updated cookie configuration
     cookie_config = {
-        "www.instagram.com": os.path.join(os.path.dirname(__file__), "instagram", "cookies.txt"),
-        "www.x.com": os.path.join(os.path.dirname(__file__), "x", "cookies.txt"),
+        "www.instagram.com": os.path.join(base_cookies_dir, "instagram", "cookies.txt"),
+        "www.x.com": os.path.join(base_cookies_dir, "x", "cookies.txt"),
     }
 
     # Extract domain from the URL
