@@ -57,10 +57,10 @@ def create_context_with_language(browser, language="en-US"):
         extra_http_headers={"Accept-Language": language}
     )
 
-def generate_dot_variations(word):
+def generate_variations(word, character):
     variations = []
     for i in range(1, len(word)):  # Start from index 1 and stop before the last character
-        variations.append(word[:i] + '.' + word[i:])
+        variations.append(word[:i] + character + word[i:])
     return variations
 
 def check(user, url_format, detection_type, current_index, total_count, *additional_args):
@@ -175,43 +175,49 @@ def read_usernames_from_file(filename):
         return [username.strip().lower() for username in usernames if len(username.strip()) >= 3 and re.match("^[A-Za-z]+$", username.strip())]
     except FileNotFoundError:
         print(f"File '{filename}' not found. Generating random usernames.")
-        return [generate_random_username(8) for _ in range(1)]
+        char_length = int(input("Enter length of characters: ").strip())
+        return [generate_random_username(char_length) for _ in range(500)]
 
 
-# Main script execution
 if __name__ == "__main__":
+    # User input for URL format and detection type
     url_format, detection_type = select_url_format()
-    file_name = input(
-        "Enter the filename with usernames (e.g., usernames.txt): ")
+
+    # File input and username loading
+    file_name = input("Enter the filename with usernames (e.g., usernames.txt): ").strip()
     usernames = read_usernames_from_file(file_name)
 
+    # Concurrency setup
     max_workers = 2
-
     total_count = len(usernames)
 
-    # Ask the user if they want to check with dot variations
-    check_variations = input("Do you want to check with dot variations? (yes/no): ").strip().lower()
+    # Platform-specific variation handling
+    variation = "."
+    if "roblox" in url_format:
+        variation = "_"
+
+    # Check with variations or not
+    check_variations = input("Do you want to check with platform-supported variations? (y/n): ").strip().lower()
     if check_variations not in ["yes", "no", "y", "n"]:
         print("Invalid input. Please type 'yes' or 'no'.")
         exit()
 
-    # Function to handle checking usernames with or without variations
-    def process_username(index, username, total_count):
+    def process_username(index, username, total_count, variation):
         if check_variations in ["yes", "y"]:
             # Generate and check dot variations
-            variations = generate_dot_variations(username)
-            for variation in variations:
-                check(variation, url_format, detection_type, index, total_count, variation)
+            variations = generate_variations(username, variation)
+            for variation_applied in variations:
+                check(variation_applied, url_format, detection_type, index, total_count, variation_applied)
         else:
             # Check only the original username
             check(username, url_format, detection_type, index, total_count, username)
 
-    # Prepare the data with indexes
+    # Prepare indexed usernames
     indexed_usernames = [(index, user) for index, user in enumerate(usernames)]
 
+    # Execute checks concurrently
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         executor.map(
-            lambda args: process_username(args[0], args[1], total_count),
+            lambda args: process_username(args[0], args[1], total_count, variation),
             indexed_usernames
         )
-
