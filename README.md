@@ -2,6 +2,7 @@
 ```
 username_utils
 ├─ .git
+│  ├─ COMMIT_EDITMSG
 │  ├─ config
 │  ├─ description
 │  ├─ FETCH_HEAD
@@ -31,8 +32,19 @@ username_utils
 │  │     │  └─ main
 │  │     └─ remotes
 │  │        └─ origin
-│  │           └─ HEAD
+│  │           ├─ HEAD
+│  │           └─ main
 │  ├─ objects
+│  │  ├─ 05
+│  │  │  └─ a36cbca58e56a73c5afa95d8a75008f6d784ba
+│  │  ├─ 2f
+│  │  │  └─ b22c792aa3e87742ab7868552de0799a1a038a
+│  │  ├─ 56
+│  │  │  └─ cdc1df7e2da94ef367d6d4de2611812a44ea94
+│  │  ├─ 95
+│  │  │  └─ 39c9c2436142d18d6e84a85b774c903f9878cc
+│  │  ├─ 9c
+│  │  │  └─ b11f5407698fe66c0dc3ab7f1f451457b1be4a
 │  │  ├─ info
 │  │  └─ pack
 │  │     ├─ pack-63f60fbf4b552ce0654346ca25762e709b554ae8.idx
@@ -44,7 +56,8 @@ username_utils
 │     │  └─ main
 │     ├─ remotes
 │     │  └─ origin
-│     │     └─ HEAD
+│     │     ├─ HEAD
+│     │     └─ main
 │     └─ tags
 ├─ .gitignore
 ├─ hits.txt
@@ -72,9 +85,8 @@ username_utils
 │     ├─ vampire-words.txt
 │     ├─ word-list-7-letters.txt
 │     └─ words.txt
-├─ page_content.html
 ├─ requirements.txt
-└─ username_unicode_generato
+└─ username_unicode_generator
    └─ generator.py
 
 ```
