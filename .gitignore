@@ -1,3 +1,6 @@
 state.json
 cookies.txt
 .git
+.json
+.env
+*.pyc

@@ -4,9 +4,11 @@ import random
 import string
 import time
 import winsound
-import concurrent.futures
+import concurrent
+import proxy_manager
 from playwright.sync_api import sync_playwright
 from playwright_stealth import stealth_sync
+
 
 def generate_random_username(length):
     if length < 1:
@@ -14,16 +16,19 @@ def generate_random_username(length):
 
     # Ensure at least one letter
     guaranteed_letter = random.choice(string.ascii_lowercase)
-    
+
     # Generate the rest of the username
     remaining_length = length - 1
-    remaining_characters = ''.join(random.choices(string.ascii_lowercase + string.digits, k=remaining_length))
-    
+    remaining_characters = ''.join(random.choices(
+        string.ascii_lowercase + string.digits, k=remaining_length))
+
     # Combine the guaranteed letter with the rest and shuffle
     username = guaranteed_letter + remaining_characters
-    username = ''.join(random.sample(username, len(username)))  # Shuffle to randomize position
-    
+    # Shuffle to randomize position
+    username = ''.join(random.sample(username, len(username)))
+
     return username
+
 
 def parse_cookies(file_path):
     cookies = []
@@ -40,15 +45,18 @@ def parse_cookies(file_path):
                     "domain": parts[0],              # Domain
                     "path": parts[2],                # Path
                     "secure": parts[3].lower() == "true",  # Secure flag
-                    "expires": int(parts[4]) if parts[4].isdigit() else None,  # Expiry timestamp
+                    # Expiry timestamp
+                    "expires": int(parts[4]) if parts[4].isdigit() else None,
                     "httpOnly": False,               # Assume httpOnly is False unless specified
                     "sameSite": "None"               # Adjust if necessary
                 })
     return cookies
 
+
 def add_cookies(context, url_format):
     # Define the base directory for the cookies
-    base_cookies_dir = os.path.join(os.path.dirname(__file__), "put_cookies_here")
+    base_cookies_dir = os.path.join(
+        os.path.dirname(__file__), "put_cookies_here")
 
     # Updated cookie configuration
     cookie_config = {
@@ -64,17 +72,12 @@ def add_cookies(context, url_format):
                 cookies = parse_cookies(path)
                 context.add_cookies(cookies)
             except FileNotFoundError:
-                print(f"[!] Cookies file not found for {site}: {path}. Proceeding without cookies.")
+                print(f"[!] Cookies file not found for {site}: {
+                      path}. Proceeding without cookies.")
             except Exception as e:
                 print(f"[!] Error loading cookies for {site}: {e}")
             return
 
-
-def create_context_with_language(browser, language="en-US,en;q=0.9"):
-    return browser.new_context(
-        extra_http_headers={"Accept-Language": language},
-        java_script_enabled=False
-    )
 
 def generate_variations(word, character):
     variations = []
@@ -82,39 +85,64 @@ def generate_variations(word, character):
         variations.append(word[:i] + character + word[i:])
     return variations
 
-def check(user, url_format, detection_type, current_index, total_count, *additional_args):
+
+def check_username(user, url_format, detection_type, current_index, total_count, proxy_pool, *additional_args):
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        context = create_context_with_language(browser)
+
+        # Get the next proxy
+        proxy = proxy_manager.get_next_proxy(proxy_pool)
+
+        browser = p.chromium.launch(
+            headless=True,
+            proxy={
+                "server": proxy, 
+                "username": os.getenv("PROXY_USERNAME"),
+                "password" : os.getenv("PROXY_PASSWORD")
+            }
+        )
+
+        context = browser.new_context(locale='en-US')
 
         add_cookies(context, url_format)
 
         page = context.new_page()
 
-        # Block non-essential resources
-        page.route("**/*", lambda route, request: 
-                   route.abort() if request.resource_type != "document" else route.continue_())
+        def should_block(request):
+            allowed_types = ['document', 'stylesheet',
+                             'script', 'xhr', 'fetch']
+            return request.resource_type not in allowed_types
+
+        page.route("**/*", lambda route, request:
+                   route.abort() if should_block(request) else route.continue_())
 
         stealth_sync(page)
 
         try:
             url = url_format.format(user, *additional_args)
-            page.goto(url, timeout=60000, wait_until="load")
+
+            wait_until = "load"
+
+            response = page.goto(url, timeout=60000, wait_until=wait_until)
             page_content = page.content()
 
-            #with open("page_content.html", "w", encoding="utf-8") as file:
-            #    file.write(page_content)
-            #print("Content saved to page_content.html")
+            # input("Press Enter to continue...")
 
-            #input("Press Enter to continue...")
-
-            if detection_type in page_content:
-                winsound.Beep(100, 100)
-                print(f"[{current_index + 1}/{total_count} | {((current_index + 1) / total_count) * 100:.2f}%] [+] Available: {user} at {url}")
+            if response.status == 404:
+                winsound.Beep(500, 500)
+                print(
+                    f"[{current_index + 1}/{total_count}] [+] Available: {user} at {url}")
+                with open("hits.txt", "a", encoding="utf-8") as f:
+                    f.write(f"{user} | Available at {url}\n")
+                browser.close()
+                return
+            elif detection_type in page_content:
+                winsound.Beep(500, 500)
+                print(
+                    f"[{current_index + 1}/{total_count}] [+] Available: {user} at {url}")
                 with open("hits.txt", "a", encoding="utf-8") as f:
                     f.write(f"{user} | Available at {url}\n")
             else:
-                print(f"[{current_index + 1}/{total_count} | {((current_index + 1) / total_count) * 100:.2f}%] [-] Taken: {user}")
+                print(f"[{current_index + 1}/{total_count}] [-] Taken: {user}")
 
         except Exception as e:
             time.sleep(15)
@@ -122,6 +150,7 @@ def check(user, url_format, detection_type, current_index, total_count, *additio
 
         # Close the browser after use
         browser.close()
+
 
 def select_url_format():
     # Define platforms, URL formats, and detection types in a dictionary
@@ -152,7 +181,8 @@ def select_url_format():
         print(f"[{key}] {name}")
 
     # Get user input
-    choice = input("\nEnter your choice (e.g., steam, bluesky, or exit to exit): ").lower()
+    choice = input(
+        "\nEnter your choice (e.g., steam, bluesky, or exit to exit): ").lower()
 
     # Handle exit case
     if choice == "exit":
@@ -184,13 +214,27 @@ def read_usernames_from_file(filename):
         return [generate_random_username(char_length) for _ in range(500)]
 
 
+def process_username(index, username, total_count, variation, proxy_pool):
+    if check_variations in ["yes", "y"]:
+        # Generate and check dot variations
+        variations = generate_variations(username, variation)
+        for variation_applied in variations:
+            check_username(variation_applied, url_format, detection_type,
+                           index, total_count, proxy_pool, variation_applied)
+    else:
+        # Check only the original username
+        check_username(username, url_format, detection_type,
+                       index, total_count, proxy_pool, username)
+
+
 if __name__ == "__main__":
     url_format, detection_type = select_url_format()
     print(f"Selected URL: {url_format}")
     print(f"Detection Type: {detection_type}")
 
     # File input and username loading
-    file_name = input("Enter the filename with usernames (e.g., usernames.txt): ").strip()
+    file_name = input(
+        "Enter the filename with usernames (e.g., usernames.txt): ").strip()
     usernames = read_usernames_from_file(file_name)
 
     # Concurrency setup
@@ -199,30 +243,25 @@ if __name__ == "__main__":
 
     # Platform-specific variation handling
     variation = "."
-    if "roblox" in url_format:
+    if "roblox" or "soundcloud" in url_format:
         variation = "_"
 
-    check_variations = input("Do you want to check with platform-supported variations? (y/n): ").strip().lower()
+    check_variations = input(
+        "Do you want to check with platform-supported variations? (y/n): ").strip().lower()
     if check_variations not in ["yes", "no", "y", "n"]:
         print("Invalid input. Please type 'yes' or 'no'.")
         exit()
 
-    def process_username(index, username, total_count, variation):
-        if check_variations in ["yes", "y"]:
-            # Generate and check dot variations
-            variations = generate_variations(username, variation)
-            for variation_applied in variations:
-                check(variation_applied, url_format, detection_type, index, total_count, variation_applied)
-        else:
-            # Check only the original username
-            check(username, url_format, detection_type, index, total_count, username)
-
     # Prepare indexed usernames
     indexed_usernames = [(index, user) for index, user in enumerate(usernames)]
+
+    # Create a proxy pool
+    proxy_pool = proxy_manager.create_proxy_pool()
 
     # Execute checks concurrently
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         executor.map(
-            lambda args: process_username(args[0], args[1], total_count, variation),
+            lambda args: process_username(
+                args[0], args[1], total_count, variation, proxy_pool),
             indexed_usernames
         )
