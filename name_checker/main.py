@@ -6,6 +6,7 @@ import time
 import winsound
 import concurrent
 import proxy_manager
+import requests
 from playwright.sync_api import sync_playwright
 from playwright_stealth import stealth_sync
 
@@ -86,71 +87,89 @@ def generate_variations(word, character):
     return variations
 
 
-def check_username(user, url_format, detection_type, current_index, total_count, proxy_pool, *additional_args):
-    with sync_playwright() as p:
+def check_username(user, url_format, detection_type, current_index, total_count, proxy_pool=None, *additional_args):
+    """
+    Checks a username using Playwright without proxies, or Requests with proxies if available.
 
-        # Get the next proxy
-        proxy = proxy_manager.get_next_proxy(proxy_pool)
+    Args:
+        user (str): The username to check.
+        url_format (str): The URL format string.
+        detection_type (str): The detection string to identify available usernames.
+        current_index (int): The current index in the list of usernames.
+        total_count (int): The total number of usernames.
+        proxy_pool (itertools.cycle, optional): The proxy pool for Requests.
+        *additional_args: Additional arguments for the URL format.
 
-        browser = p.chromium.launch(
-            headless=True,
-            proxy={
-                "server": proxy, 
-                "username": os.getenv("PROXY_USERNAME"),
-                "password" : os.getenv("PROXY_PASSWORD")
+    Returns:
+        None
+    """
+    try:
+        # Construct the URL
+        url = url_format.format(user, *additional_args)
+
+        if proxy_pool:
+            # Use Requests with proxies
+            proxy = next(proxy_pool)
+            proxies = {
+                "http": proxy,
+                "https": proxy
             }
-        )
 
-        context = browser.new_context(locale='en-US')
-
-        add_cookies(context, url_format)
-
-        page = context.new_page()
-
-        def should_block(request):
-            allowed_types = ['document', 'stylesheet',
-                             'script', 'xhr', 'fetch']
-            return request.resource_type not in allowed_types
-
-        page.route("**/*", lambda route, request:
-                   route.abort() if should_block(request) else route.continue_())
-
-        stealth_sync(page)
-
-        try:
-            url = url_format.format(user, *additional_args)
-
-            wait_until = "load"
-
-            response = page.goto(url, timeout=60000, wait_until=wait_until)
-            page_content = page.content()
-
-            # input("Press Enter to continue...")
-
-            if response.status == 404:
+            response = requests.get(url, proxies=proxies, timeout=10)
+            if response.status_code == 404:
                 winsound.Beep(500, 500)
-                print(
-                    f"[{current_index + 1}/{total_count}] [+] Available: {user} at {url}")
+                print(f"[{current_index + 1}/{total_count}] [+] Available: {user} at {url}")
                 with open("hits.txt", "a", encoding="utf-8") as f:
                     f.write(f"{user} | Available at {url}\n")
-                browser.close()
-                return
-            elif detection_type in page_content:
+            elif detection_type in response.text:
                 winsound.Beep(500, 500)
-                print(
-                    f"[{current_index + 1}/{total_count}] [+] Available: {user} at {url}")
+                print(f"[{current_index + 1}/{total_count}] [+] Available: {user} at {url}")
                 with open("hits.txt", "a", encoding="utf-8") as f:
                     f.write(f"{user} | Available at {url}\n")
             else:
                 print(f"[{current_index + 1}/{total_count}] [-] Taken: {user}")
+        else:
+            # Use Playwright without proxies
+            print(f"Using Playwright for: {url}")
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                context = browser.new_context(locale='en-US')
 
-        except Exception as e:
-            time.sleep(15)
-            print(f"[!] Error checking {user}: {e}")
+                add_cookies(context, url_format)  # Add cookies if necessary
+                page = context.new_page()
 
-        # Close the browser after use
-        browser.close()
+                def should_block(request):
+                    allowed_types = ['document', 'stylesheet', 'script', 'xhr', 'fetch']
+                    return request.resource_type not in allowed_types
 
+                page.route("**/*", lambda route, request:
+                           route.abort() if should_block(request) else route.continue_())
+
+                stealth_sync(page)
+
+                # Navigate to the URL
+                response = page.goto(url, timeout=60000, wait_until="load")
+                page_content = page.content()
+
+                if response.status == 404:
+                    winsound.Beep(500, 500)
+                    print(f"[{current_index + 1}/{total_count}] [+] Available: {user} at {url}")
+                    with open("hits.txt", "a", encoding="utf-8") as f:
+                        f.write(f"{user} | Available at {url}\n")
+                elif detection_type in page_content:
+                    winsound.Beep(500, 500)
+                    print(f"[{current_index + 1}/{total_count}] [+] Available: {user} at {url}")
+                    with open("hits.txt", "a", encoding="utf-8") as f:
+                        f.write(f"{user} | Available at {url}\n")
+                else:
+                    print(f"[{current_index + 1}/{total_count}] [-] Taken: {user}")
+
+                # Close the browser
+                browser.close()
+
+    except Exception as e:
+        time.sleep(15)
+        print(f"[!] Error checking {user}: {e}")
 
 def select_url_format():
     # Define platforms, URL formats, and detection types in a dictionary
