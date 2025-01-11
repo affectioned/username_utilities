@@ -4,3 +4,4 @@ cookies.txt
 .json
 .env
 *.pyc
+test.py
