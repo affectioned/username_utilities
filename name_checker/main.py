@@ -97,7 +97,7 @@ def check_username(user, url_format, detection_type, current_index, total_count,
            # Proxy setup
             proxy = next(proxy_pool)
             proxies = {"http": proxy, "https": proxy}
-            
+
             try:
                 # Request with headers and proxies
                 response = requests.get(url, headers=utils.rotate_headers(), proxies=proxies, timeout=10)
@@ -278,10 +278,14 @@ if __name__ == "__main__":
     # Create a proxy pool
     proxy_pool = proxy_manager.create_proxy_pool()
 
-    # Execute checks concurrently
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
+    try:
         executor.map(
             lambda args: process_username(
                 args[0], args[1], total_count, variation, proxy_pool),
             indexed_usernames
         )
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        executor.shutdown(wait=True)  # Ensure all threads are joined
