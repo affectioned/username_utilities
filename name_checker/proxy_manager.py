@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 def create_proxy_pool():
     """
     Creates a single-item cycle for the Webshare rotating proxy using environment variables.
@@ -15,6 +16,7 @@ def create_proxy_pool():
     if not proxy_url:
         raise ValueError("PROXY_URL environment variable is not set.")
     return cycle([proxy_url])  # Create a single-item cycle
+
 
 def get_next_proxy(proxy_pool):
     """

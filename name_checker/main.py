@@ -1,35 +1,13 @@
 import os
-import re
-import random
-import string
 import time
 import winsound
 import concurrent
 import proxy_manager
 import requests
 import utils
+import string_utils
 from playwright.sync_api import sync_playwright
 from playwright_stealth import stealth_sync
-
-
-def generate_random_username(length):
-    if length < 1:
-        raise ValueError("Length must be at least 1")
-
-    # Ensure at least one letter
-    guaranteed_letter = random.choice(string.ascii_lowercase)
-
-    # Generate the rest of the username
-    remaining_length = length - 1
-    remaining_characters = ''.join(random.choices(
-        string.ascii_lowercase + string.digits, k=remaining_length))
-
-    # Combine the guaranteed letter with the rest and shuffle
-    username = guaranteed_letter + remaining_characters
-    # Shuffle to randomize position
-    username = ''.join(random.sample(username, len(username)))
-
-    return username
 
 
 def parse_cookies(file_path):
@@ -81,13 +59,6 @@ def add_cookies(context, url_format):
             return
 
 
-def generate_variations(word, character):
-    variations = []
-    for i in range(1, len(word)):  # Start from index 1 and stop before the last character
-        variations.append(word[:i] + character + word[i:])
-    return variations
-
-
 def check_username(user, url_format, detection_type, current_index, total_count, proxy_pool=None, *additional_args):
     try:
         # Construct the URL
@@ -100,30 +71,37 @@ def check_username(user, url_format, detection_type, current_index, total_count,
 
             try:
                 # Request with headers and proxies
-                response = requests.get(url, headers=utils.rotate_headers(), proxies=proxies, timeout=10)
+                response = requests.get(
+                    url, headers=utils.rotate_headers(), proxies=proxies, timeout=10)
                 status = response.status_code
 
                 if status == 404:
                     winsound.Beep(500, 500)
-                    print(f"[{current_index + 1}/{total_count}] [+] Available: {user} at {url}")
+                    print(
+                        f"[{current_index + 1}/{total_count}] [+] Available: {user} at {url}")
                     utils.write_hits(user, url)
                 elif status == 200:
                     if detection_type in response.text:
                         winsound.Beep(500, 500)
-                        print(f"[{current_index + 1}/{total_count}] [+] Available: {user} at {url}")
+                        print(
+                            f"[{current_index + 1}/{total_count}] [+] Available: {user} at {url}")
                         utils.write_hits(user, url)
                     else:
-                        print(f"[{current_index + 1}/{total_count}] [-] Taken: {user}")
+                        print(
+                            f"[{current_index + 1}/{total_count}] [-] Taken: {user}")
                 elif status == 429:
                     retry_after = int(response.headers.get("Retry-After", 10))
-                    print(f"[{current_index + 1}/{total_count}] [!] Too Many Requests: Pausing for {retry_after} seconds.")
+                    print(
+                        f"[{current_index + 1}/{total_count}] [!] Too Many Requests: Pausing for {retry_after} seconds.")
                     time.sleep(retry_after)
                     proxy = next(proxy_pool)  # Rotate proxy
                 elif status == 403:
-                    print(f"[{current_index + 1}/{total_count}] [!] Forbidden: Retrying with a different proxy.")
+                    print(
+                        f"[{current_index + 1}/{total_count}] [!] Forbidden: Retrying with a different proxy.")
                     proxy = next(proxy_pool)  # Rotate proxy
                 else:
-                    print(f"[{current_index + 1}/{total_count}] [-] Unexpected status code {status} for {user}")
+                    print(
+                        f"[{current_index + 1}/{total_count}] [-] Unexpected status code {status} for {user}")
             except requests.exceptions.RequestException as e:
                 print(f"[{current_index + 1}/{total_count}] [!] Error: {e}")
         else:
@@ -218,26 +196,10 @@ def select_url_format():
         return select_url_format()  # Recursively ask again
 
 
-# Read usernames from a file or generate random ones
-def read_usernames_from_file(filename):
-    script_directory = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(script_directory, "wordlists", filename)
-
-    try:
-        with open(file_path, "r", encoding="utf-8") as file:
-            usernames = file.readlines()
-            print(f"Usernames to check: {len(usernames)}")
-        return [username.strip().lower() for username in usernames if len(username.strip()) >= 3 and re.match("^[A-Za-z]+$", username.strip())]
-    except FileNotFoundError:
-        print(f"File '{filename}' not found. Generating random usernames.")
-        char_length = int(input("Enter length of characters: ").strip())
-        return [generate_random_username(char_length) for _ in range(500)]
-
-
 def process_username(index, username, total_count, variation, proxy_pool):
     if check_variations in ["yes", "y"]:
         # Generate and check dot variations
-        variations = generate_variations(username, variation)
+        variations = utils.generate_variations(username, variation)
         for variation_applied in variations:
             check_username(variation_applied, url_format, detection_type,
                            index, total_count, proxy_pool, variation_applied)
@@ -255,10 +217,10 @@ if __name__ == "__main__":
     # File input and username loading
     file_name = input(
         "Enter the filename with usernames (e.g., usernames.txt): ").strip()
-    usernames = read_usernames_from_file(file_name)
+    usernames = string_utils.read_usernames_from_file(file_name)
 
     # Concurrency setup
-    max_workers = 2
+    max_workers = 8
     total_count = len(usernames)
 
     # Platform-specific variation handling

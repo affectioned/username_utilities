@@ -36,3 +36,9 @@ def rotate_headers():
     }
 
     return headers
+
+def generate_variations(word, character):
+    variations = []
+    for i in range(1, len(word)):  # Start from index 1 and stop before the last character
+        variations.append(word[:i] + character + word[i:])
+    return variations
