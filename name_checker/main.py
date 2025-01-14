@@ -146,7 +146,7 @@ def select_url_format():
     platforms = {
         "steam": ("Steam", "https://steamcommunity.com/id/{}", "The specified profile could not be found"),
         "bluesky": ("Bluesky", "https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle={}.bsky.social", "Unable to resolve handle"),
-        "vrchat": ("VRChat", "https://api.vrchat.cloud/api/1/auth/exists?username={}&displayName={}", '"userExists":false'),
+        "vrchat": ("VRChat", "https://vrchat.com/api/1/auth/exists?username={}&displayName={}&excludeUserId=usr_f8e5f44a-bc1a-4aeb-b426-f849b8e5dcb0", '{"nameOk":true,"userExists":false}'),
         "twitch": ("Twitch", "https://www.twitch.tv/{}", "Sorry. Unless you've got a time machine, that content is unavailable"),
         "snapchat": ("Snapchat", "https://www.snapchat.com/add/{}", "This content was not found"),
         "soundcloud": ("SoundCloud", "https://soundcloud.com/{}", "We can’t find that user."),

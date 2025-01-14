@@ -3157,3 +3157,6 @@ automobiles | Available at https://api.vrchat.cloud/api/1/auth/exists?username=a
 strengthening | Available at https://api.vrchat.cloud/api/1/auth/exists?username=strengthening&displayName=strengthening
 swaziland | Available at https://api.vrchat.cloud/api/1/auth/exists?username=swaziland&displayName=swaziland
 varieties | Available at https://api.vrchat.cloud/api/1/auth/exists?username=varieties&displayName=varieties
+ney3bpib | Available at https://vrchat.com/api/1/auth/exists?username=ney3bpib&displayName=ney3bpib&excludeUserId=usr_f8e5f44a-bc1a-4aeb-b426-f849b8e5dcb0
+vzvu5u24 | Available at https://vrchat.com/api/1/auth/exists?username=vzvu5u24&displayName=vzvu5u24&excludeUserId=usr_f8e5f44a-bc1a-4aeb-b426-f849b8e5dcb0
+depicter | Available at https://vrchat.com/api/1/auth/exists?username=depicter&displayName=depicter&excludeUserId=usr_f8e5f44a-bc1a-4aeb-b426-f849b8e5dcb0

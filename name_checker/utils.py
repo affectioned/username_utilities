@@ -6,7 +6,7 @@ def write_hits(user, url):
 
 def debug_requests_endpoint(url):
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/134.0 Mobile/15E148 Safari/605.1.15"
     }
 
     response = requests.get(url, headers=headers)
@@ -16,15 +16,11 @@ def debug_requests_endpoint(url):
     print("Response JSON:", response.json() if response.headers.get('Content-Type') == 'application/json' else "No JSON")
     exit
 
-import random
-
 def make_headers():
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
-        "Accept-Language": "en-US,en;q=0.9",  # Always English
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/134.0 Mobile/15E148 Safari/605.1.15",
+        "Accept-Language": "en-GB,en;q=0.9", 
         "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1"
     }
 
     return headers
