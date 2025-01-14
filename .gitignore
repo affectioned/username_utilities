@@ -5,3 +5,4 @@ cookies.txt
 .env
 *.pyc
 test.py
+debug.html

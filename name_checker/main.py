@@ -9,7 +9,6 @@ import string_utils
 from playwright.sync_api import sync_playwright
 from playwright_stealth import stealth_sync
 
-
 def parse_cookies(file_path):
     cookies = []
     with open(file_path, "r", encoding="utf-8") as f:
@@ -57,6 +56,31 @@ def add_cookies(context, url_format):
             except Exception as e:
                 print(f"[!] Error loading cookies for {site}: {e}")
             return
+        
+def handle_status_code(status, user, url, current_index, total_count, detection_type, response, proxy_pool):
+    if status == 404:
+        winsound.Beep(500, 500)
+        utils.print_progress(current_index, total_count, f"[+] Available: {user} at {url}")
+        utils.write_hits(user, url)
+    elif status == 200:
+        if detection_type in response.text:
+            winsound.Beep(500, 500)
+            utils.print_progress(current_index, total_count, f"[+] Available: {user} at {url}")
+            utils.write_hits(user, url)
+        else:
+            utils.print_progress(current_index, total_count, f"[-] Taken: {user}")
+    elif status == 429:
+        retry_after = int(response.headers.get("Retry-After", 10))
+        utils.print_progress(current_index, total_count, f"[!] Too Many Requests: Pausing for {retry_after} seconds")
+        time.sleep(retry_after)
+        return next(proxy_pool)  # Rotate proxy
+    elif status == 403:
+        utils.print_progress(current_index, total_count, "[!] Forbidden: Retrying with a different proxy")
+        return next(proxy_pool)  # Rotate proxy
+    else:
+        utils.print_progress(current_index, total_count, f"[-] Unexpected status code {status} for {user}")
+        utils.debug_requests_endpoint(url)
+        exit
 
 
 def check_username(user, url_format, detection_type, current_index, total_count, proxy_pool=None, *additional_args):
@@ -64,7 +88,7 @@ def check_username(user, url_format, detection_type, current_index, total_count,
         # Construct the URL
         url = url_format.format(user, *additional_args)
 
-        if proxy_pool:
+        if proxy_pool and "fortnite" not in url:
            # Proxy setup
             proxy = next(proxy_pool)
             proxies = {"http": proxy, "https": proxy}
@@ -72,77 +96,44 @@ def check_username(user, url_format, detection_type, current_index, total_count,
             try:
                 # Request with headers and proxies
                 response = requests.get(
-                    url, headers=utils.rotate_headers(), proxies=proxies, timeout=10)
+                    url, headers=utils.make_headers(), proxies=proxies, timeout=10)
                 status = response.status_code
 
-                if status == 404:
-                    winsound.Beep(500, 500)
-                    print(
-                        f"[{current_index + 1}/{total_count}] [+] Available: {user} at {url}")
-                    utils.write_hits(user, url)
-                elif status == 200:
-                    if detection_type in response.text:
-                        winsound.Beep(500, 500)
-                        print(
-                            f"[{current_index + 1}/{total_count}] [+] Available: {user} at {url}")
-                        utils.write_hits(user, url)
-                    else:
-                        print(
-                            f"[{current_index + 1}/{total_count}] [-] Taken: {user}")
-                elif status == 429:
-                    retry_after = int(response.headers.get("Retry-After", 10))
-                    print(
-                        f"[{current_index + 1}/{total_count}] [!] Too Many Requests: Pausing for {retry_after} seconds.")
-                    time.sleep(retry_after)
-                    proxy = next(proxy_pool)  # Rotate proxy
-                elif status == 403:
-                    print(
-                        f"[{current_index + 1}/{total_count}] [!] Forbidden: Retrying with a different proxy.")
-                    proxy = next(proxy_pool)  # Rotate proxy
-                else:
-                    print(
-                        f"[{current_index + 1}/{total_count}] [-] Unexpected status code {status} for {user}")
+                handle_status_code(status, user, url, current_index, total_count, detection_type, response, proxy_pool)
             except requests.exceptions.RequestException as e:
                 print(f"[{current_index + 1}/{total_count}] [!] Error: {e}")
         else:
-            # Use Playwright without proxies
-            print(f"Using Playwright for: {url}")
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
+                browser = p.chromium.launch(headless=False)
                 context = browser.new_context(locale='en-US')
 
-                add_cookies(context, url_format)  # Add cookies if necessary
+                # Add cookies if necessary
+                add_cookies(context, url_format)
                 page = context.new_page()
 
                 def should_block(request):
-                    allowed_types = ['document', 'stylesheet',
-                                     'script', 'xhr', 'fetch']
+                    allowed_types = ['document', 'stylesheet', 'script', 'xhr', 'fetch']
                     return request.resource_type not in allowed_types
 
-                page.route("**/*", lambda route, request:
-                           route.abort() if should_block(request) else route.continue_())
+                page.route("**/*", lambda route, request: route.abort() if should_block(request) else route.continue_())
 
+                # Add stealth behaviors
                 stealth_sync(page)
 
-                # Navigate to the URL
-                response = page.goto(url, timeout=60000, wait_until="load")
+                response = page.goto(url, wait_until="load")  # Navigate without waiting for load
                 page_content = page.content()
-
+            
                 if response.status == 404:
                     winsound.Beep(500, 500)
-                    print(
-                        f"[{current_index + 1}/{total_count}] [+] Available: {user} at {url}")
+                    utils.print_progress(current_index, total_count, f"[+] Available: {user} at {url}")
                     utils.write_hits(user, url)
                 elif detection_type in page_content:
                     winsound.Beep(500, 500)
-                    print(
-                        f"[{current_index + 1}/{total_count}] [+] Available: {user} at {url}")
+                    utils.print_progress(current_index, total_count, f"[+] Available: {user} at {url}")
                     utils.write_hits(user, url)
                 else:
-                    print(
-                        f"[{current_index + 1}/{total_count}] [-] Taken: {user}")
+                    utils.print_progress(current_index, total_count, f"[-] Taken: {user}")
 
-                # Close the browser
                 browser.close()
 
     except Exception as e:
@@ -166,7 +157,7 @@ def select_url_format():
         "instagram": ("Instagram (Feed it Cookies)", "https://www.instagram.com/{}", "Sorry, this page isn't available."),
         "minecraft": ("Minecraft", "https://api.mojang.com/users/profiles/minecraft/{}", "Couldn't find any profile with name"),
         "github": ("Github", "https://www.github.com/{}", "This is not the web page you are looking for"),
-        "epic_games": ("Epic Games (Fortnite)", "https://fortnitetracker.com/profile/search?q=", "We are unable to find your profile"),
+        "epic_games": ("Epic Games (Fortnite)", "https://fortnite.gg/stats?player={}", "I can't find a player named"),
         "xbox": ("Xbox", "https://xboxgamertag.com/search/{}", "Gamertag doesn't exist"),
         "roblox": ("Roblox", "https://auth.roblox.com/v1/usernames/validate?request.username={}&request.birthday=2002-09-09", "Username is valid"),
         "pinterest": ("Pinterest", "https://www.pinterest.com/{}", '!--><template id="B:0"></template><!--/$--><!--$--><title></title'),
