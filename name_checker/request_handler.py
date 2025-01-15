@@ -39,7 +39,7 @@ def check_availability_with_status_code(user, checks, proxy_pool=None, max_retri
 
                 headers = get_playwright_headers(url, False)
                 cookies = get_cookies_from_website(url, False)
-                response = requests.get(url, headers=headers, cookies=cookies)
+                response = requests.get(url, headers=headers, proxies=proxies, cookies=cookies)
 
 
                 status_code = response.status_code
