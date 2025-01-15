@@ -5,8 +5,8 @@ import time
 from playwright.sync_api import sync_playwright
 from playwright_stealth import stealth_sync
 from cookie_manager import add_cookies
-
-import time
+from cookie_parser import get_cookies_from_website
+from cookie_parser import get_playwright_headers
 
 def check_availability_with_status_code(user, checks, proxy_pool=None, max_retries=3, rate_limit_pause=60):
     """
@@ -37,10 +37,11 @@ def check_availability_with_status_code(user, checks, proxy_pool=None, max_retri
                     proxy = next(proxy_pool)
                     proxies = {"http": proxy, "https": proxy}
 
-                # Make the request
-                response = requests.get(
-                    url, headers=utils.make_headers(), proxies=proxies, timeout=10
-                )
+                headers = get_playwright_headers(url, False)
+                cookies = get_cookies_from_website(url, False)
+                response = requests.get(url, headers=headers, cookies=cookies)
+
+
                 status_code = response.status_code
 
                 # Handle rate limiting
