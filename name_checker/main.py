@@ -1,244 +1,101 @@
-import os
-import time
-import winsound
-import concurrent
+import concurrent.futures
 import proxy_manager
-import requests
 import utils
-import string_utils
-from playwright.sync_api import sync_playwright
-from playwright_stealth import stealth_sync
-
-def parse_cookies(file_path):
-    cookies = []
-    with open(file_path, "r", encoding="utf-8") as f:
-        for line in f:
-            # Skip comments and blank lines
-            if line.startswith("#") or not line.strip():
-                continue
-            parts = line.strip().split("\t")
-            if len(parts) >= 7:
-                cookies.append({
-                    "name": parts[5],                # Cookie name
-                    "value": parts[6],               # Cookie value
-                    "domain": parts[0],              # Domain
-                    "path": parts[2],                # Path
-                    "secure": parts[3].lower() == "true",  # Secure flag
-                    # Expiry timestamp
-                    "expires": int(parts[4]) if parts[4].isdigit() else None,
-                    "httpOnly": False,               # Assume httpOnly is False unless specified
-                    "sameSite": "None"               # Adjust if necessary
-                })
-    return cookies
+import username_utils
+from platforms_config import platforms
+from request_handler import check_availability_with_status_code
+from functools import partial
 
 
-def add_cookies(context, url_format):
-    # Define the base directory for the cookies
-    base_cookies_dir = os.path.join(
-        os.path.dirname(__file__), "put_cookies_here")
+def check_username(user, platform, total_count, proxy_pool=None):
+    """
+    Check the availability of a username using HTTP requests or Playwright based on platform checks.
 
-    # Updated cookie configuration
-    cookie_config = {
-        "www.instagram.com": os.path.join(base_cookies_dir, "instagram", "cookies.txt"),
-        "www.x.com": os.path.join(base_cookies_dir, "x", "cookies.txt"),
-    }
-
-    # Extract domain from the URL
-    for site in cookie_config:
-        if site in url_format:
-            path = cookie_config[site]
-            try:
-                cookies = parse_cookies(path)
-                context.add_cookies(cookies)
-            except FileNotFoundError:
-                print(f"[!] Cookies file not found for {site}: {
-                      path}. Proceeding without cookies.")
-            except Exception as e:
-                print(f"[!] Error loading cookies for {site}: {e}")
-            return
-        
-def handle_status_code(status, user, url, current_index, total_count, detection_type, response, proxy_pool):
-    if status == 404:
-        winsound.Beep(500, 500)
-        utils.print_progress(current_index, total_count, f"[+] Available: {user} at {url}")
-        utils.write_hits(user, url)
-    elif status == 200:
-        if detection_type in response.text:
-            winsound.Beep(500, 500)
-            utils.print_progress(current_index, total_count, f"[+] Available: {user} at {url}")
-            utils.write_hits(user, url)
-        else:
-            utils.print_progress(current_index, total_count, f"[-] Taken: {user}")
-    elif status == 429:
-        retry_after = int(response.headers.get("Retry-After", 10))
-        utils.print_progress(current_index, total_count, f"[!] Too Many Requests: Pausing for {retry_after} seconds")
-        time.sleep(retry_after)
-        return next(proxy_pool)  # Rotate proxy
-    elif status == 403:
-        utils.print_progress(current_index, total_count, "[!] Forbidden: Retrying with a different proxy")
-        return next(proxy_pool)  # Rotate proxy
-    else:
-        utils.print_progress(current_index, total_count, f"[-] Unexpected status code {status} for {user}")
-        utils.debug_requests_endpoint(url)
-        exit
-
-
-def check_username(user, url_format, detection_type, current_index, total_count, proxy_pool=None, *additional_args):
+    Args:
+        user (str): The username to check.
+        platform (dict): The selected platform's information containing name and checks.
+        total_count (int): The total number of usernames to check.
+        proxy_pool (Iterator, optional): A pool of proxies for requests. Defaults to None.
+    """
     try:
-        # Construct the URL
-        url = url_format.format(user, *additional_args)
+        # Use the centralized method to check all URLs
+        result = check_availability_with_status_code(user, platform['checks'], proxy_pool)
 
-        if proxy_pool and "fortnite" not in url:
-           # Proxy setup
-            proxy = next(proxy_pool)
-            proxies = {"http": proxy, "https": proxy}
-
-            try:
-                # Request with headers and proxies
-                response = requests.get(
-                    url, headers=utils.make_headers(), proxies=proxies, timeout=10)
-                status = response.status_code
-
-                handle_status_code(status, user, url, current_index, total_count, detection_type, response, proxy_pool)
-            except requests.exceptions.RequestException as e:
-                print(f"[{current_index + 1}/{total_count}] [!] Error: {e}")
+        # Log the result based on the final status
+        if result["final_status"] == "available":
+            utils.write_hits(result["user"], platform["name"])
+            status = "[+] Available"
         else:
-            with sync_playwright() as p:
-                browser = p.chromium.launch(headless=False)
-                context = browser.new_context(locale='en-US')
-
-                # Add cookies if necessary
-                add_cookies(context, url_format)
-                page = context.new_page()
-
-                def should_block(request):
-                    allowed_types = ['document', 'stylesheet', 'script', 'xhr', 'fetch']
-                    return request.resource_type not in allowed_types
-
-                page.route("**/*", lambda route, request: route.abort() if should_block(request) else route.continue_())
-
-                # Add stealth behaviors
-                stealth_sync(page)
-
-                response = page.goto(url, wait_until="load")  # Navigate without waiting for load
-                page_content = page.content()
-            
-                if response.status == 404:
-                    winsound.Beep(500, 500)
-                    utils.print_progress(current_index, total_count, f"[+] Available: {user} at {url}")
-                    utils.write_hits(user, url)
-                elif detection_type in page_content:
-                    winsound.Beep(500, 500)
-                    utils.print_progress(current_index, total_count, f"[+] Available: {user} at {url}")
-                    utils.write_hits(user, url)
-                else:
-                    utils.print_progress(current_index, total_count, f"[-] Taken: {user}")
-
-                browser.close()
+            status = "[-] Taken"
 
     except Exception as e:
-        time.sleep(15)
+        # Handle unexpected errors gracefully
+        status = "[!] Error"
         print(f"[!] Error checking {user}: {e}")
 
+    # Calculate percentage of processed usernames
+    processed_count = len(username_utils.get_processed_usernames())
+    percentage = (processed_count / total_count) * 100
 
-def select_url_format():
-    # Define platforms, URL formats, and detection types in a dictionary
-    platforms = {
-        "steam": ("Steam", "https://steamcommunity.com/id/{}", "The specified profile could not be found"),
-        "bluesky": ("Bluesky", "https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle={}.bsky.social", "Unable to resolve handle"),
-        "vrchat": ("VRChat", "https://vrchat.com/api/1/auth/exists?username={}&displayName={}&excludeUserId=usr_f8e5f44a-bc1a-4aeb-b426-f849b8e5dcb0", '{"nameOk":true,"userExists":false}'),
-        "twitch": ("Twitch", "https://www.twitch.tv/{}", "Sorry. Unless you've got a time machine, that content is unavailable"),
-        "snapchat": ("Snapchat", "https://www.snapchat.com/add/{}", "This content was not found"),
-        "soundcloud": ("SoundCloud", "https://soundcloud.com/{}", "We can’t find that user."),
-        "apple_music": ("Apple Music", "https://music.apple.com/profile/{}", "The page you're looking for can't be found."),
-        "x": ("X (Feed it Cookies)", "https://x.com/{}", "This account doesn’t exist"),
-        "steam_groups": ("Steam Groups", "https://steamcommunity.com/groups/{}", "No group could be retrieved for the given URL."),
-        "youtube": ("YouTube (Feed it Cookies)", "https://www.youtube.com/@{}", "error?src=404&amp"),
-        "instagram": ("Instagram (Feed it Cookies)", "https://www.instagram.com/{}", "Sorry, this page isn't available."),
-        "minecraft": ("Minecraft", "https://api.mojang.com/users/profiles/minecraft/{}", "Couldn't find any profile with name"),
-        "github": ("Github", "https://www.github.com/{}", "This is not the web page you are looking for"),
-        "epic_games": ("Epic Games (Fortnite)", "https://fortnite.gg/stats?player={}", "I can't find a player named"),
-        "xbox": ("Xbox", "https://xboxgamertag.com/search/{}", "Gamertag doesn't exist"),
-        "roblox": ("Roblox", "https://auth.roblox.com/v1/usernames/validate?request.username={}&request.birthday=2002-09-09", "Username is valid"),
-        "pinterest": ("Pinterest", "https://www.pinterest.com/{}", '!--><template id="B:0"></template><!--/$--><!--$--><title></title'),
-        "exit": ("Exit", None, None)
-    }
+    # Log progress at the end
+    print(f"[{processed_count}/{total_count}] ({percentage:.2f}%) {status}: {user} on {platform['name']}")
+    username_utils.mark_username_processed(user)
 
-    # Print menu dynamically
+def select_platform():
+    """
+    Prompt the user to select a platform to check usernames, and return the corresponding checks.
+
+    Returns:
+        dict: The selected platform's information containing the name and checks.
+    """
     print("\nChoose a platform to check usernames:")
-    for key, (name, _, _) in platforms.items():
-        print(f"[{key}] {name}")
+    for key, platform_info in platforms.items():
+        print(f"[{key}] {platform_info['name']}")
 
-    # Get user input
-    choice = input(
-        "\nEnter your choice (e.g., steam, bluesky, or exit to exit): ").lower()
+    choice = input("\nEnter your choice (e.g., xbox, roblox, telegram, or exit to exit): ").lower()
 
-    # Handle exit case
     if choice == "exit":
         print("Exiting...")
         exit(0)
 
-    # Validate user input
     if choice in platforms:
-        _, url_format, detection_type = platforms[choice]
-        return url_format, detection_type
-    else:
-        print("Invalid choice. Please try again.")
-        return select_url_format()  # Recursively ask again
+        return platforms[choice]
 
-
-def process_username(index, username, total_count, variation, proxy_pool):
-    if check_variations in ["yes", "y"]:
-        # Generate and check dot variations
-        variations = utils.generate_variations(username, variation)
-        for variation_applied in variations:
-            check_username(variation_applied, url_format, detection_type,
-                           index, total_count, proxy_pool, variation_applied)
-    else:
-        # Check only the original username
-        check_username(username, url_format, detection_type,
-                       index, total_count, proxy_pool, username)
+    print("Invalid choice. Please try again.")
+    return select_platform()
 
 
 if __name__ == "__main__":
-    url_format, detection_type = select_url_format()
-    print(f"Selected URL: {url_format}")
-    print(f"Detection Type: {detection_type}")
+    # Select the platform to check usernames
+    selected_platform = select_platform()
+    print(f"- Selected platform: {selected_platform['name']}")
+    print(f"- Checks to perform: {selected_platform['checks']}")
 
-    # File input and username loading
-    file_name = input(
-        "Enter the filename with usernames (e.g., usernames.txt): ").strip()
-    usernames = string_utils.read_usernames_from_file(file_name)
-
-    # Concurrency setup
-    max_workers = 8
+    # Load usernames to check
+    usernames = username_utils.load_usernames()
     total_count = len(usernames)
 
-    # Platform-specific variation handling
-    variation = "."
-    if "roblox" or "soundcloud" in url_format:
-        variation = "_"
-
-    check_variations = input(
-        "Do you want to check with platform-supported variations? (y/n): ").strip().lower()
-    if check_variations not in ["yes", "no", "y", "n"]:
-        print("Invalid input. Please type 'yes' or 'no'.")
-        exit()
-
-    # Prepare indexed usernames
-    indexed_usernames = [(index, user) for index, user in enumerate(usernames)]
-
-    # Create a proxy pool
     proxy_pool = proxy_manager.create_proxy_pool()
 
-    executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
+    print("Starting username checks...")
+
     try:
-        executor.map(
-            lambda args: process_username(
-                args[0], args[1], total_count, variation, proxy_pool),
-            indexed_usernames
-        )
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+            # Submit tasks individually
+            future_to_user = {
+                executor.submit(
+                    check_username, user, selected_platform, total_count, proxy_pool
+                ): user for user in usernames
+            }
+
+            for future in concurrent.futures.as_completed(future_to_user):
+                user = future_to_user[future]
+                try:
+                    future.result()  # This raises any exception that occurred in the thread
+                except Exception as e:
+                    print(f"[!] Error occurred while checking {user}: {e}")
+
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"[!] An error occurred during execution: {e}")
     finally:
-        executor.shutdown(wait=True)  # Ensure all threads are joined
+        print("All username checks completed.")
