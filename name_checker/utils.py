@@ -19,7 +19,7 @@ def write_hits(user, platform_name):
         title=f"Username Available: {user}",
         description=f"The username **{user}** is available on **{platform_name}**.",
         color=0x00FF00,  # Green color for success
-        footer="Note: Availability might also mean the username is banned or locked."
+        footer="*Note: Availability might also mean the username is banned or locked.*"
     )
 
 def debug_requests_endpoint(
@@ -81,6 +81,11 @@ def debug_requests_endpoint(
                 print(response.json())
             except ValueError:
                 print("Invalid JSON in response.")
+
+        # Save response text to a file
+        with open("response_output.txt", "w", encoding="utf-8") as f:
+            f.write(response.text)
+        print("Response text saved to response_output.txt")
 
     except requests.exceptions.RequestException as e:
         print(f"An error occurred while making the request: {e}")
@@ -149,6 +154,10 @@ def send_webhook(title, description, color=0x7289DA, footer=None, platform_name=
         "title": title,
         "description": description,
         "color": color,
+        "fields": [
+            {"name": "Platform", "value": platform_name, "inline": True},
+            {"name": "Username", "value": user, "inline": True},
+        ],
     }
 
     if footer:

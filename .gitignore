@@ -6,3 +6,4 @@ cookies.txt
 *.pyc
 test.py
 debug.html
+*.txt

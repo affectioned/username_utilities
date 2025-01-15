@@ -65,7 +65,7 @@ platforms = {
     "instagram": {
         "name": "Instagram (Feed it Cookies)",
         "checks": [
-            {"url": "https://www.instagram.com/{}", "detection": "Sorry, this page isn't available."}
+            {"url": "https://www.instagram.com/{}", "detection": '"desktop_show_sign_up_as_primary_cta": false'}
         ]
     },
     "minecraft": {

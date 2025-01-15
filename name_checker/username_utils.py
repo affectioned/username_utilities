@@ -58,7 +58,7 @@ def read_usernames_from_file(filename):
     except FileNotFoundError:
         print(f"File '{filename}' not found. Generating random usernames.")
         char_length = int(input("Enter length of characters: ").strip())
-        return [generate_random_username(char_length) for _ in range(500)]
+        return [generate_random_username(char_length) for _ in range(1)]
     
 def create_indexed_usernames(usernames):
     return [(index, user) for index, user in enumerate(usernames)]
