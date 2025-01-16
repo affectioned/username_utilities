@@ -45,7 +45,6 @@ def load_usernames():
         print(ve)
         exit()
 
-# Read usernames from a file or generate random ones
 def read_usernames_from_file(filename):
     script_directory = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(script_directory, "wordlists", filename)
@@ -54,7 +53,11 @@ def read_usernames_from_file(filename):
         with open(file_path, "r", encoding="utf-8") as file:
             usernames = file.readlines()
             print(f"Usernames to check: {len(usernames)}")
-        return [username.strip().lower() for username in usernames if len(username.strip()) >= 3 and re.match("^[A-Za-z]+$", username.strip())]
+        # Filter and process usernames
+        filtered_usernames = [username.strip().lower() for username in usernames if len(username.strip()) >= 3 and re.match("^[A-Za-z]+$", username.strip())]
+        # Shuffle the usernames
+        random.shuffle(filtered_usernames)
+        return filtered_usernames
     except FileNotFoundError:
         print(f"File '{filename}' not found. Generating random usernames.")
         char_length = int(input("Enter length of characters: ").strip())

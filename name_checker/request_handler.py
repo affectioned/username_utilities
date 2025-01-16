@@ -32,9 +32,11 @@ def check_availability_with_status_code(user, checks, max_retries=3, rate_limit_
             try:
                 proxy_config = get_proxy_config()
 
+                proxy_url = f"http://{proxy_config['username']}:{proxy_config['password']}@{proxy_config['server'].split('://')[1]}"
+
                 proxies = {
-                    "http": f"http://{proxy_config['username']}:{proxy_config['password']}@{proxy_config['server'].split('://')[1]}",
-                    "https": f"http://{proxy_config['username']}:{proxy_config['password']}@{proxy_config['server'].split('://')[1]}"
+                    "http": proxy_url,
+                    "https": proxy_url
                 }
 
                 response = requests.get(

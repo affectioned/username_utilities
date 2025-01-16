@@ -1,5 +1,4 @@
 import os
-import requests
 from itertools import cycle
 from dotenv import load_dotenv
 
