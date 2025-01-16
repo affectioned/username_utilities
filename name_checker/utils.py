@@ -19,7 +19,9 @@ def write_hits(user, platform_name):
         title=f"Username Available: {user}",
         description=f"The username **{user}** is available on **{platform_name}**.",
         color=0x00FF00,  # Green color for success
-        footer="*Note: Availability might also mean the username is banned or locked.*"
+        footer="*Note: Availability might also mean the username is banned or locked.*",
+        platform_name=platform_name,
+        user=user,
     )
 
 def debug_requests_endpoint(
@@ -136,6 +138,9 @@ def debug_page_content(page_content):
     print("Page content saved to: debug.html")
     exit
 
+import os
+import requests
+
 def send_webhook(title, description, color=0x7289DA, footer=None, platform_name=None, user=None):
     """
     Sends a styled webhook to a Discord channel.
@@ -152,26 +157,26 @@ def send_webhook(title, description, color=0x7289DA, footer=None, platform_name=
     if not webhook_url:
         raise ValueError("DISCORD_WEBHOOK_URL environment variable is not set.")
 
+    # Ensure non-empty fields
+    fields = []
+    if platform_name:
+        fields.append({"name": "Platform", "value": platform_name, "inline": True})
+    if user:
+        fields.append({"name": "Username", "value": user, "inline": True})
+
     embed = {
         "title": title,
         "description": description,
         "color": color,
-        "fields": [
-            {"name": "Platform", "value": platform_name, "inline": True},
-            {"name": "Username", "value": user, "inline": True},
-        ],
+        "fields": fields,
     }
 
     if footer:
         embed["footer"] = {"text": footer}
 
-    payload = {
-        "embeds": [embed]
-    }
+    payload = {"embeds": [embed]}
 
-    headers = {
-        "Content-Type": "application/json"
-    }
+    headers = {"Content-Type": "application/json"}
 
     response = requests.post(webhook_url, json=payload, headers=headers)
     if not response.ok:

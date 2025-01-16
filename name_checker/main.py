@@ -4,7 +4,6 @@ import utils
 import username_utils
 from platforms_config import platforms
 from request_handler import check_availability_with_status_code
-from functools import partial
 
 
 def check_username(user, platform, total_count, proxy_pool=None):

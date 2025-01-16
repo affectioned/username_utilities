@@ -5,8 +5,6 @@ import time
 from playwright.sync_api import sync_playwright
 from playwright_stealth import stealth_sync
 from cookie_manager import add_cookies
-from cookie_parser import get_cookies_from_website
-from cookie_parser import get_playwright_headers
 
 def check_availability_with_status_code(user, checks, proxy_pool=None, max_retries=3, rate_limit_pause=60):
     """
@@ -37,9 +35,7 @@ def check_availability_with_status_code(user, checks, proxy_pool=None, max_retri
                     proxy = next(proxy_pool)
                     proxies = {"http": proxy, "https": proxy}
 
-                headers = get_playwright_headers(url, False)
-                cookies = get_cookies_from_website(url, False)
-                response = requests.get(url, headers=headers, proxies=proxies, cookies=cookies)
+                response = requests.get(url, headers=utils.make_headers(), proxies=proxies)
 
 
                 status_code = response.status_code
@@ -85,7 +81,7 @@ def check_availability_with_status_code(user, checks, proxy_pool=None, max_retri
         "final_status": "available",
     }
 
-def check_availability_with_playwright(url, url_format, user, current_index, total_count, detection_pattern):
+def check_availability_with_playwright(user, checks, proxy_pool=None, max_retries=3, rate_limit_pause=60):
     """
     Check the availability of a resource using Playwright.
     
@@ -97,40 +93,45 @@ def check_availability_with_playwright(url, url_format, user, current_index, tot
         total_count (int): The total number of items being checked.
         detection_pattern (str): The detection pattern for availability.
     """
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
-        context = browser.new_context(locale='en-US')
+    results = []
 
-        # Add cookies if necessary
-        add_cookies(context, url_format)
-        page = context.new_page()
+    for check in checks:
+        url = check['url'].format(user)
+        detection_pattern = check['detection']
+        retries = 0
+        while retries < max_retries:  # Retry loop for handling failures
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=False)
+                context = browser.new_context(locale='en-US')
 
-        # Define a blocking function for resource types
-        def should_block(request):
-            allowed_types = ['document', 'stylesheet', 'script', 'xhr', 'fetch']
-            return request.resource_type not in allowed_types
+                # Add cookies if necessary
+                add_cookies(context)
+                page = context.new_page()
 
-        # Route requests to block unwanted resource types
-        page.route("**/*", lambda route, request: route.abort() if should_block(request) else route.continue_())
+                # Define a blocking function for resource types
+                def should_block(request):
+                    allowed_types = ['document', 'stylesheet', 'script', 'xhr', 'fetch']
+                    return request.resource_type not in allowed_types
 
-        # Add stealth behaviors to the page
-        stealth_sync(page)
+                # Route requests to block unwanted resource types
+                page.route("**/*", lambda route, request: route.abort() if should_block(request) else route.continue_())
 
-        # Navigate to the URL
-        response = page.goto(url, wait_until="load")  # Navigate without waiting for load
-        page_content = page.content()
+                # Add stealth behaviors to the page
+                stealth_sync(page)
 
-        # Check the response status and page content
-        if response.status == 404:
-            winsound.Beep(500, 500)
-            utils.print_progress(current_index, total_count, f"[+] Available: {user} at {url}")
-            utils.write_hits(user, url)
-        elif detection_pattern in page_content:
-            winsound.Beep(500, 500)
-            utils.print_progress(current_index, total_count, f"[+] Available: {user} at {url}")
-            utils.write_hits(user, url)
-        else:
-            utils.print_progress(current_index, total_count, f"[-] Taken: {user}")
+                # Navigate to the URL
+                response = page.goto(url, wait_until="load")  # Navigate without waiting for load
+                page_content = page.content()
 
-        # Close the browser
-        browser.close()
+                # Check the response status and page content
+                if response.status == 404:
+                    results.append({"url": url, "status": "available"})
+                elif detection_pattern in page_content:
+                    winsound.Beep(500, 500)
+                    utils.print_progress(current_index, total_count, f"[+] Available: {user} at {url}")
+                    utils.write_hits(user, url)
+                else:
+                    utils.print_progress(current_index, total_count, f"[-] Taken: {user}")
+
+                # Close the browser
+                browser.close()
