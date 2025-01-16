@@ -5,8 +5,9 @@ import time
 from playwright.sync_api import sync_playwright
 from playwright_stealth import stealth_sync
 from cookie_manager import add_cookies
+from proxy_manager import get_proxy_config
 
-def check_availability_with_status_code(user, checks, proxy_pool=None, max_retries=3, rate_limit_pause=60):
+def check_availability_with_status_code(user, checks, max_retries=3, rate_limit_pause=60):
     """
     Check the availability of a username by processing multiple URL checks.
 
@@ -29,24 +30,25 @@ def check_availability_with_status_code(user, checks, proxy_pool=None, max_retri
 
         while retries < max_retries:  # Retry loop for handling failures
             try:
-                # Use proxy if available
-                proxies = None
-                if proxy_pool:
-                    proxy = next(proxy_pool)
-                    proxies = {"http": proxy, "https": proxy}
+                proxy_config = get_proxy_config()
 
-                response = requests.get(url, headers=utils.make_headers(), proxies=proxies)
+                proxies = {
+                    "http": f"http://{proxy_config['username']}:{proxy_config['password']}@{proxy_config['server'].split('://')[1]}",
+                    "https": f"http://{proxy_config['username']}:{proxy_config['password']}@{proxy_config['server'].split('://')[1]}"
+                }
 
+                response = requests.get(
+                    url, headers=utils.make_headers(), proxies=proxies)
 
                 status_code = response.status_code
 
                 # Handle rate limiting
                 if status_code == 429:
-                    retry_after = int(response.headers.get("Retry-After", rate_limit_pause))
-                    print(f"[!] Rate limited for {url}. Retrying after {retry_after} seconds...")
+                    retry_after = int(response.headers.get(
+                        "Retry-After", rate_limit_pause))
+                    print(f"[!] Rate limited for {url}. Retrying after {
+                          retry_after} seconds...")
                     time.sleep(retry_after)
-                    if proxy_pool:  # Rotate proxy if possible
-                        print(f"[!] Rotating proxy for {url}.")
                     continue
 
                 # Determine result based on status code and detection pattern
@@ -65,11 +67,13 @@ def check_availability_with_status_code(user, checks, proxy_pool=None, max_retri
 
             except requests.exceptions.RequestException as e:
                 retries += 1
-                print(f"[!] Error accessing {url} (Attempt {retries}/{max_retries}): {e}")
+                print(f"[!] Error accessing {
+                      url} (Attempt {retries}/{max_retries}): {e}")
                 time.sleep(10)  # Wait before retrying
 
         if retries == max_retries:  # If max retries are reached, apply a rate-limit break
-            print(f"[!] Max retries reached for {url}. Taking a rate-limit break of {rate_limit_pause} seconds...")
+            print(f"[!] Max retries reached for {
+                  url}. Taking a rate-limit break of {rate_limit_pause} seconds...")
             time.sleep(rate_limit_pause)
             results.append({"url": url, "status": "error"})
             break  # Exit the retry loop
@@ -81,17 +85,20 @@ def check_availability_with_status_code(user, checks, proxy_pool=None, max_retri
         "final_status": "available",
     }
 
+
 def check_availability_with_playwright(user, checks, proxy_pool=None, max_retries=3, rate_limit_pause=60):
     """
     Check the availability of a resource using Playwright.
-    
+
     Args:
-        url (str): The target URL to check.
-        url_format (str): The URL format for adding cookies.
         user (str): The user identifier being checked.
-        current_index (int): The current index in the check process.
-        total_count (int): The total number of items being checked.
-        detection_pattern (str): The detection pattern for availability.
+        checks (list): A list of checks containing URL and detection pattern.
+        proxy_pool (list): A pool of proxy servers (optional).
+        max_retries (int): The maximum number of retries.
+        rate_limit_pause (int): Pause time in seconds for rate-limiting.
+
+    Returns:
+        dict: A dictionary containing the results and the final status.
     """
     results = []
 
@@ -100,38 +107,69 @@ def check_availability_with_playwright(user, checks, proxy_pool=None, max_retrie
         detection_pattern = check['detection']
         retries = 0
         while retries < max_retries:  # Retry loop for handling failures
-            with sync_playwright() as p:
-                browser = p.chromium.launch(headless=False)
-                context = browser.new_context(locale='en-US')
+            try:
+                with sync_playwright() as p:
 
-                # Add cookies if necessary
-                add_cookies(context)
-                page = context.new_page()
+                    # Display the actual proxy details
+                    browser = p.chromium.launch(headless=True)
+                    context = browser.new_context(locale='en-US')
 
-                # Define a blocking function for resource types
-                def should_block(request):
-                    allowed_types = ['document', 'stylesheet', 'script', 'xhr', 'fetch']
-                    return request.resource_type not in allowed_types
+                    # Add cookies if necessary
+                    add_cookies(context, url)
 
-                # Route requests to block unwanted resource types
-                page.route("**/*", lambda route, request: route.abort() if should_block(request) else route.continue_())
+                    page = context.new_page()
 
-                # Add stealth behaviors to the page
-                stealth_sync(page)
+                    # Define a blocking function for resource types
+                    def should_block(request):
+                        allowed_types = ['document', 'xhr', 'fetch']
+                        return request.resource_type not in allowed_types
 
-                # Navigate to the URL
-                response = page.goto(url, wait_until="load")  # Navigate without waiting for load
-                page_content = page.content()
+                    # Route requests to block unwanted resource types
+                    page.route("**/*", lambda route, request: route.abort()
+                               if should_block(request) else route.continue_())
 
-                # Check the response status and page content
-                if response.status == 404:
-                    results.append({"url": url, "status": "available"})
-                elif detection_pattern in page_content:
-                    winsound.Beep(500, 500)
-                    utils.print_progress(current_index, total_count, f"[+] Available: {user} at {url}")
-                    utils.write_hits(user, url)
-                else:
-                    utils.print_progress(current_index, total_count, f"[-] Taken: {user}")
+                    # Add stealth behaviors to the page
+                    stealth_sync(page)
 
-                # Close the browser
-                browser.close()
+                    # Navigate to the URL
+                    response = page.goto(url, wait_until="load", timeout=60000)
+                    page_content = page.content()
+
+                    # Check the response status and page content
+                    if response.status == 404:
+                        results.append({"url": url, "status": "available"})
+                    elif detection_pattern in page_content:
+                        results.append({"url": url, "status": "available"})
+                    else:
+                        results.append({"url": url, "status": "taken"})
+                        return {  # Exit immediately if a check determines the username is taken
+                            "user": user,
+                            "checks": results,
+                            "final_status": "taken",
+                        }
+
+                    # Close browser resources
+                    context.close()
+                    browser.close()
+                    break  # Break out of retry loop on success
+
+            except Exception as e:  # Catch Playwright-specific exceptions
+                retries += 1
+                print(f"[!] Error accessing {
+                      url} (Attempt {retries}/{max_retries}): {e}")
+                time.sleep(10)  # Wait before retrying
+                continue
+
+        if retries == max_retries:  # If max retries are reached, apply a rate-limit break
+            print(f"[!] Max retries reached for {
+                  url}. Taking a rate-limit break of {rate_limit_pause} seconds...")
+            time.sleep(rate_limit_pause)
+            results.append({"url": url, "status": "error"})
+            break  # Exit the retry loop
+
+    # If all checks pass, the username is available
+    return {
+        "user": user,
+        "checks": results,
+        "final_status": "available",
+    }

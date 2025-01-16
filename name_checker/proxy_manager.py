@@ -1,31 +1,38 @@
 import os
+import requests
 from itertools import cycle
 from dotenv import load_dotenv
 
 load_dotenv()
 
+def get_proxy_domain():
+    domain = os.getenv("PROXY_DOMAIN")
+    if not domain:
+        raise ValueError("PROXY_DOMAIN is not set in the .env file.")
+    return domain
 
-def create_proxy_pool():
-    """
-    Creates a single-item cycle for the Webshare rotating proxy using environment variables.
+def get_proxy_port():
+    port = os.getenv("PROXY_PORT")
+    if not port:
+        raise ValueError("PROXY_PORT is not set in the .env file.")
+    return port
 
-    Returns:
-        itertools.cycle: A cycle with a single authenticated proxy for infinite iteration.
-    """
-    proxy_url = os.getenv("PROXY_URL")
-    if not proxy_url:
-        raise ValueError("PROXY_URL environment variable is not set.")
-    return cycle([proxy_url])  # Create a single-item cycle
+def get_proxy_username():
+    username = os.getenv("PROXY_USERNAME")
+    if not username:
+        raise ValueError("PROXY_USERNAME is not set in the .env file.")
+    return username
 
+def get_proxy_password():
+    password = os.getenv("PROXY_PASSWORD")
+    if not password:
+        raise ValueError("PROXY_PASSWORD is not set in the .env file.")
+    return password
 
-def get_next_proxy(proxy_pool):
-    """
-    Fetches the next proxy from the pool.
-
-    Args:
-        proxy_pool (itertools.cycle): The proxy pool.
-
-    Returns:
-        str: The next proxy.
-    """
-    return next(proxy_pool)
+def get_proxy_config():
+    """Returns the full proxy configuration as a dictionary."""
+    return {
+        "server": f"http://{get_proxy_domain()}:{get_proxy_port()}",
+        "username": get_proxy_username(),
+        "password": get_proxy_password()
+    }

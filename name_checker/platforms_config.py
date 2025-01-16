@@ -44,8 +44,8 @@ platforms = {
             {"url": "https://music.apple.com/profile/{}", "detection": "The page you're looking for can't be found."}
         ]
     },
-    "x": {
-        "name": "X (Feed it Cookies)",
+    "twitter": {
+        "name": "twitter",
         "checks": [
             {"url": "https://x.com/{}", "detection": "This account doesn’t exist"}
         ]
@@ -57,13 +57,13 @@ platforms = {
         ]
     },
     "youtube": {
-        "name": "YouTube (Feed it Cookies)",
+        "name": "YouTube",
         "checks": [
             {"url": "https://www.youtube.com/@{}", "detection": "error?src=404&amp"}
         ]
     },
     "instagram": {
-        "name": "Instagram (Feed it Cookies)",
+        "name": "Instagram",
         "checks": [
             {"url": "https://www.instagram.com/{}", "detection": '"desktop_show_sign_up_as_primary_cta": false'}
         ]
@@ -83,7 +83,7 @@ platforms = {
     "epic_games": {
         "name": "Epic Games (Fortnite)",
         "checks": [
-            {"url": "https://fortnite.gg/stats?player={}", "detection": "I can't find a player named"}
+            {"url": "https://fortnitetracker.com/profile/all/{}", "detection": "404 Not Found. We are unable to find your profile."}
         ]
     },
     "xbox": {

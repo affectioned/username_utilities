@@ -1,32 +1,20 @@
 
 ```
 username_utils
-├─ hits.txt
 ├─ name_checker
+│  ├─ cookie_manager.py
+│  ├─ hits_filter.py
 │  ├─ main.py
+│  ├─ platforms_config.py
 │  ├─ platform_specific
 │  │  ├─ discord_checker.py
 │  │  └─ netease_checker.py
-│  └─ wordlists
-│     ├─ 4letterwords.txt
-│     ├─ 5letterwords.txt
-│     ├─ 8 letter words.pay.txt
-│     ├─ common-5-words.txt
-│     ├─ female.txt
-│     ├─ four_letter_words.txt
-│     ├─ google-10000-english-usa-no-swears-long.txt
-│     ├─ google-10000-english-usa-no-swears-medium.txt
-│     ├─ google-10000-english-usa-no-swears-short.txt
-│     ├─ gothic-words.txt
-│     ├─ internet_slang_words.txt
-│     ├─ Japanese.txt
-│     ├─ love-words.txt
-│     ├─ sgb-words.txt
-│     ├─ six-letter-words.txt
-│     ├─ vampire-words.txt
-│     ├─ word-list-7-letters.txt
-│     └─ words.txt
-├─ requirements.txt
+│  ├─ proxy_manager.py
+│  ├─ request_handler.py
+│  ├─ username_utils.py
+│  ├─ utils.py
+│  ├─ wordlists
+│  └─ __pycache__
 └─ username_unicode_generator
    └─ generator.py
 

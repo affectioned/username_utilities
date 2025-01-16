@@ -1,12 +1,11 @@
 import concurrent.futures
-import proxy_manager
 import utils
 import username_utils
 from platforms_config import platforms
 from request_handler import check_availability_with_status_code
+from request_handler import check_availability_with_playwright
 
-
-def check_username(user, platform, total_count, proxy_pool=None):
+def check_username(user, platform, total_count):
     """
     Check the availability of a username using HTTP requests or Playwright based on platform checks.
 
@@ -17,8 +16,11 @@ def check_username(user, platform, total_count, proxy_pool=None):
         proxy_pool (Iterator, optional): A pool of proxies for requests. Defaults to None.
     """
     try:
-        # Use the centralized method to check all URLs
-        result = check_availability_with_status_code(user, platform['checks'], proxy_pool)
+        result = ""
+        if platform["name"] =="Epic Games (Fortnite)" or "Instagram" or "X" or "YouTube":
+            result = check_availability_with_playwright(user, platform["checks"])
+        else:
+            result = check_availability_with_status_code(user, platform['checks'])
 
         # Log the result based on the final status
         if result["final_status"] == "available":
@@ -74,16 +76,14 @@ if __name__ == "__main__":
     usernames = username_utils.load_usernames()
     total_count = len(usernames)
 
-    proxy_pool = proxy_manager.create_proxy_pool()
-
     print("Starting username checks...")
 
     try:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
             # Submit tasks individually
             future_to_user = {
                 executor.submit(
-                    check_username, user, selected_platform, total_count, proxy_pool
+                    check_username, user, selected_platform, total_count
                 ): user for user in usernames
             }
 

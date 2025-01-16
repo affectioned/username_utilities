@@ -23,7 +23,7 @@ def parse_cookies(file_path):
     return cookies
 
 
-def add_cookies(context, url_format):
+def add_cookies(context, url):
     # Define the base directory for the cookies
     base_cookies_dir = os.path.join(
         os.path.dirname(__file__), "put_cookies_here")
@@ -36,7 +36,7 @@ def add_cookies(context, url_format):
 
     # Extract domain from the URL
     for site in cookie_config:
-        if site in url_format:
+        if site in url:
             path = cookie_config[site]
             try:
                 cookies = parse_cookies(path)
