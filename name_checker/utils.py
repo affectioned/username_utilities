@@ -138,9 +138,6 @@ def debug_page_content(page_content):
     print("Page content saved to: debug.html")
     exit
 
-import os
-import requests
-
 def send_webhook(title, description, color=0x7289DA, footer=None, platform_name=None, user=None):
     """
     Sends a styled webhook to a Discord channel.

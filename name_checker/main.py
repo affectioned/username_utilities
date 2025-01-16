@@ -17,7 +17,7 @@ def check_username(user, platform, total_count):
     """
     try:
         result = ""
-        if platform["name"] =="Epic Games (Fortnite)" or "Instagram" or "X" or "YouTube":
+        if platform["name"] == "Epic Games" or "Instagram" or "Twitter" or "YouTube":
             result = check_availability_with_playwright(user, platform["checks"])
         else:
             result = check_availability_with_status_code(user, platform['checks'])
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     print("Starting username checks...")
 
     try:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
             # Submit tasks individually
             future_to_user = {
                 executor.submit(
