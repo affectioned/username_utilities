@@ -1,13 +1,12 @@
-import winsound
 import utils
 import requests
 import time
 from playwright.sync_api import sync_playwright
 from playwright_stealth import stealth_sync
 from cookie_manager import add_cookies
-from proxy_manager import get_proxy_config
 
-def check_availability_with_status_code(user, checks, max_retries=3, rate_limit_pause=60):
+
+def check_availability_with_status_code(user, checks, proxy_config, max_retries=3, rate_limit_pause=60):
     """
     Check the availability of a username by processing multiple URL checks.
 
@@ -24,15 +23,22 @@ def check_availability_with_status_code(user, checks, max_retries=3, rate_limit_
     results = []
 
     for check in checks:
-        url = check['url'].format(user)
+        try:
+            # Dynamically replace all `{}` placeholders with `user`
+            url = check['url'].format(*(user,) * check['url'].count("{}"))
+        except IndexError as e:
+            print(f"[!] Error formatting URL: {
+                  check['url']}, user: {user}. Error: {e}")
+            results.append({"url": check['url'], "status": "error"})
+            continue
+
         detection_pattern = check['detection']
         retries = 0
 
         while retries < max_retries:  # Retry loop for handling failures
             try:
-                proxy_config = get_proxy_config()
-
-                proxy_url = f"http://{proxy_config['username']}:{proxy_config['password']}@{proxy_config['server'].split('://')[1]}"
+                proxy_url = f"http://{proxy_config['username']}:{
+                    proxy_config['password']}@{proxy_config['server'].split('://')[1]}"
 
                 proxies = {
                     "http": proxy_url,

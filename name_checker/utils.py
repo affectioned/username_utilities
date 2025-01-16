@@ -75,6 +75,7 @@ def debug_requests_endpoint(
         print(f"Status Code: {response.status_code}")
         print(f"Headers: {response.headers}")
         print(f"Elapsed Time: {response.elapsed}")
+        print(f"Content-Lenght: {len(response.text)}")
         print("Response Text:")
         print(response.text)
 
@@ -91,11 +92,10 @@ def debug_requests_endpoint(
             f.write(response.text)
         print("Response text saved to response_output.txt")
 
+        return response
+
     except requests.exceptions.RequestException as e:
         print(f"An error occurred while making the request: {e}")
-    finally:
-        if exit_on_complete:
-            exit()
 
 def make_headers():
     headers = {

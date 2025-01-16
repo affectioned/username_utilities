@@ -20,7 +20,7 @@ platforms = {
     "vrchat": {
         "name": "VRChat",
         "checks": [
-            {"url": "https://vrchat.com/api/1/auth/exists?username={}&displayName={}&excludeUserId=usr_f8e5f44a-bc1a-4aeb-b426-f849b8e5dcb0",
+            {"url": "https://vrchat.com/api/1/auth/exists?username={}&displayName={}",
                 "detection": '{"nameOk":true,"userExists":false}'}
         ]
     },
@@ -89,6 +89,8 @@ platforms = {
     "github": {
         "name": "Github",
         "checks": [
+            {"url": "https://avatars.githubusercontent.com/{}",
+             "detection": "Z&BXQ"},
             {"url": "https://www.github.com/{}",
                 "detection": "This is not the web page you are looking for"}
         ]

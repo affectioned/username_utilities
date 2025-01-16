@@ -4,6 +4,7 @@ import username_utils
 from platforms_config import platforms
 from request_handler import check_availability_with_status_code
 from request_handler import check_availability_with_playwright
+from proxy_manager import get_proxy_config
 
 def check_username(user, platform, total_count):
     """
@@ -17,10 +18,11 @@ def check_username(user, platform, total_count):
     """
     try:
         result = ""
-        if platform["name"] == "Epic Games" or "Instagram" or "Twitter" or "YouTube":
+        proxy_config = get_proxy_config()
+        if platform["name"] in ["Epic Games", "Instagram", "Twitter", "YouTube"]:
             result = check_availability_with_playwright(user, platform["checks"])
         else:
-            result = check_availability_with_status_code(user, platform['checks'])
+            result = check_availability_with_status_code(user, platform['checks'], proxy_config)
 
         # Log the result based on the final status
         if result["final_status"] == "available":
