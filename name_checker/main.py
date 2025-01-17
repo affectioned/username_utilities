@@ -37,12 +37,12 @@ def check_username(user, platform, total_count):
         print(f"[!] Error checking {user}: {e}")
 
     # Calculate percentage of processed usernames
-    processed_count = len(common_utils.get_processed_usernames())
+    processed_count = len(common_utils.get_processed_usernames()) 
     percentage = (processed_count / total_count) * 100
 
     # Log progress at the end
-    print(f"[{processed_count}/{total_count}] ({percentage:.2f}%) {status}: {user} on {platform['name']}")
     common_utils.mark_username_processed(user)
+    print(f"[{processed_count}/{total_count}] ({percentage:.2f}%) {status}: {user} on {platform['name']}")
 
 def select_platform():
     """
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     print("Starting username checks...")
 
     try:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=12) as executor:
             # Submit tasks individually
             future_to_user = {
                 executor.submit(
