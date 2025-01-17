@@ -30,7 +30,7 @@ def get_proxy_password():
 def get_proxy_config():
     """Returns the full proxy configuration as a dictionary."""
     return {
-        "server": f"http://{get_proxy_domain()}:{get_proxy_port()}",
+        "server": f"{get_proxy_domain()}:{get_proxy_port()}",
         "username": get_proxy_username(),
         "password": get_proxy_password()
     }

@@ -6,6 +6,7 @@ from request_handler import check_with_playwright
 from request_handler import check_with_requests
 from proxy_manager import get_proxy_config
 
+
 def check_username(user, platform, total_count):
     """
     Check the availability of a username using HTTP requests or Playwright based on platform checks.
@@ -20,9 +21,9 @@ def check_username(user, platform, total_count):
         result = ""
         proxy_config = get_proxy_config()
         if platform["name"] in ["Epic Games", "Instagram", "Twitter", "YouTube"]:
-            result = check_with_requests(user, platform["checks"])
+            result = check_with_playwright(user, platform["checks"])
         else:
-            result = check_with_playwright(user, platform['checks'], proxy_config)
+            result = check_with_requests(user, platform["checks"], proxy_config)
 
         # Log the result based on the final status
         if result["final_status"] == "available":
@@ -37,12 +38,14 @@ def check_username(user, platform, total_count):
         print(f"[!] Error checking {user}: {e}")
 
     # Calculate percentage of processed usernames
-    processed_count = len(common_utils.get_processed_usernames()) 
+    processed_count = len(common_utils.get_processed_usernames()) + 1
     percentage = (processed_count / total_count) * 100
 
     # Log progress at the end
     common_utils.mark_username_processed(user)
-    print(f"[{processed_count}/{total_count}] ({percentage:.2f}%) {status}: {user} on {platform['name']}")
+    print(f"[{processed_count}/{total_count}] ({percentage:.2f}%) {
+          status}: {user} on {platform['name']}")
+
 
 def select_platform():
     """
@@ -55,7 +58,8 @@ def select_platform():
     for key, platform_info in platforms.items():
         print(f"[{key}] {platform_info['name']}")
 
-    choice = input("\nEnter your choice (e.g., xbox, roblox, telegram, or exit to exit): ").lower()
+    choice = input(
+        "\nEnter your choice (e.g., xbox, roblox, telegram, or exit to exit): ").lower()
 
     if choice == "exit":
         print("Exiting...")

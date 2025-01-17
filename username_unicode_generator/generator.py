@@ -31,9 +31,11 @@ unicode_map = {
     "Z": "Ζ"   # Greek capital Zeta
 }
 
+
 def generate_variations_in_stages(word, unicode_map):
     # Identify all positions in the word that can be replaced
-    replaceable_positions = [(i, unicode_map[char]) for i, char in enumerate(word) if char in unicode_map]
+    replaceable_positions = [(i, unicode_map[char])
+                             for i, char in enumerate(word) if char in unicode_map]
 
     # We'll build a list of lists, where each sublist corresponds to variations
     # with a certain number of replaced characters.
@@ -47,6 +49,7 @@ def generate_variations_in_stages(word, unicode_map):
             stage_variations.append("".join(new_word))
         all_stages.append(stage_variations)
     return all_stages
+
 
 def main():
     word = input("Enter a word: ").strip()
@@ -62,6 +65,7 @@ def main():
                 for variation in stage_variations:
                     print(f"[{variation_index}] {variation}")
                     variation_index += 1
+
 
 if __name__ == "__main__":
     main()

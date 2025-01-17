@@ -37,7 +37,8 @@ def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pa
 
         while retries < max_retries:  # Retry loop for handling failures
             try:
-                proxy_url = f"http://{proxy_config['username']}:{proxy_config['password']}@{proxy_config['server']}"
+                proxy_url = f"http://{proxy_config['username']}:{
+                    proxy_config['password']}@{proxy_config['server']}"
 
                 proxies = {
                     "http": proxy_url,
@@ -93,7 +94,7 @@ def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pa
     }
 
 
-def check_with_playwright(user, checks, proxy_pool=None, max_retries=3, rate_limit_pause=60):
+def check_with_playwright(user, checks, max_retries=3, rate_limit_pause=60):
     """
     Check the availability of a resource using Playwright.
 
