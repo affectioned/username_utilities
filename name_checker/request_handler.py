@@ -37,8 +37,7 @@ def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pa
 
         while retries < max_retries:  # Retry loop for handling failures
             try:
-                proxy_url = f"http://{proxy_config['username']}:{
-                    proxy_config['password']}@{proxy_config['server'].split('://')[1]}"
+                proxy_url = f"http://{proxy_config['username']}:{proxy_config['password']}@{proxy_config['server']}"
 
                 proxies = {
                     "http": proxy_url,
