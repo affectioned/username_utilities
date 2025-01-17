@@ -6,7 +6,7 @@ from playwright_stealth import stealth_sync
 from cookie_manager import add_cookies
 
 
-def check_availability_with_status_code(user, checks, proxy_config, max_retries=3, rate_limit_pause=60):
+def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pause=60):
     """
     Check the availability of a username by processing multiple URL checks.
 
@@ -94,7 +94,7 @@ def check_availability_with_status_code(user, checks, proxy_config, max_retries=
     }
 
 
-def check_availability_with_playwright(user, checks, proxy_pool=None, max_retries=3, rate_limit_pause=60):
+def check_with_playwright(user, checks, proxy_pool=None, max_retries=3, rate_limit_pause=60):
     """
     Check the availability of a resource using Playwright.
 

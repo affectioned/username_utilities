@@ -1,9 +1,9 @@
 import concurrent.futures
 import utils
-import username_utils
+import common_utils
 from platforms_config import platforms
-from request_handler import check_availability_with_status_code
-from request_handler import check_availability_with_playwright
+from request_handler import check_with_playwright
+from request_handler import check_with_requests
 from proxy_manager import get_proxy_config
 
 def check_username(user, platform, total_count):
@@ -20,9 +20,9 @@ def check_username(user, platform, total_count):
         result = ""
         proxy_config = get_proxy_config()
         if platform["name"] in ["Epic Games", "Instagram", "Twitter", "YouTube"]:
-            result = check_availability_with_playwright(user, platform["checks"])
+            result = check_with_requests(user, platform["checks"])
         else:
-            result = check_availability_with_status_code(user, platform['checks'], proxy_config)
+            result = check_with_playwright(user, platform['checks'], proxy_config)
 
         # Log the result based on the final status
         if result["final_status"] == "available":
@@ -37,12 +37,12 @@ def check_username(user, platform, total_count):
         print(f"[!] Error checking {user}: {e}")
 
     # Calculate percentage of processed usernames
-    processed_count = len(username_utils.get_processed_usernames())
+    processed_count = len(common_utils.get_processed_usernames())
     percentage = (processed_count / total_count) * 100
 
     # Log progress at the end
     print(f"[{processed_count}/{total_count}] ({percentage:.2f}%) {status}: {user} on {platform['name']}")
-    username_utils.mark_username_processed(user)
+    common_utils.mark_username_processed(user)
 
 def select_platform():
     """
@@ -75,7 +75,7 @@ if __name__ == "__main__":
     print(f"- Checks to perform: {selected_platform['checks']}")
 
     # Load usernames to check
-    usernames = username_utils.load_usernames()
+    usernames = common_utils.load_usernames()
     total_count = len(usernames)
 
     print("Starting username checks...")
