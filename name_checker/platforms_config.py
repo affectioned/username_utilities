@@ -41,8 +41,8 @@ platforms = {
     "soundcloud": {
         "name": "SoundCloud",
         "checks": [
-            {"url": "https://soundcloud.com/{}",
-                "detection": "We can’t find that user."}
+            {"url": "https://api-v2.soundcloud.com/resolve?url=https%3A//soundcloud.com/{}&client_id=meQQRL0IxbE5bGwr7b9pBtluA7WtDzYX&app_version=1737115213&app_locale=en",
+                "detection": "{}"}
         ]
     },
     "apple_music": {

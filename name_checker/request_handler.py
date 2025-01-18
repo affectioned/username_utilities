@@ -13,7 +13,7 @@ def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pa
     Args:
         user (str): The username to check.
         checks (list): A list of checks, each a dictionary with 'url' and 'detection'.
-        proxy_pool (Iterator, optional): A pool of proxies for requests. Defaults to None.
+        proxy_config (dict): Proxy configuration with keys 'username', 'password', and 'server'.
         max_retries (int): Maximum number of retries for each request. Defaults to 3.
         rate_limit_pause (int): Time to pause (in seconds) after multiple consecutive failures. Defaults to 60.
 
@@ -24,7 +24,7 @@ def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pa
 
     for check in checks:
         try:
-            # Dynamically replace all `{}` placeholders with `user`
+            # Dynamically replace placeholders with `user`
             url = check['url'].format(*(user,) * check['url'].count("{}"))
         except IndexError as e:
             print(f"[!] Error formatting URL: {
@@ -35,19 +35,14 @@ def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pa
         detection_pattern = check['detection']
         retries = 0
 
-        while retries < max_retries:  # Retry loop for handling failures
+        while retries < max_retries:  # Retry loop
             try:
                 proxy_url = f"http://{proxy_config['username']}:{
                     proxy_config['password']}@{proxy_config['server']}"
-
-                proxies = {
-                    "http": proxy_url,
-                    "https": proxy_url
-                }
+                proxies = {"http": proxy_url, "https": proxy_url}
 
                 response = requests.get(
                     url, headers=utils.make_headers(), proxies=proxies)
-
                 status_code = response.status_code
 
                 # Handle rate limiting
@@ -59,32 +54,33 @@ def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pa
                     time.sleep(retry_after)
                     continue
 
-                # Determine result based on status code and detection pattern
+                # Process response
                 if status_code == 404:
                     results.append({"url": url, "status": "available"})
+                    break  # Move to the next check immediately
                 elif status_code == 200 and detection_pattern in response.text:
                     results.append({"url": url, "status": "available"})
+                    break
                 else:
                     results.append({"url": url, "status": "taken"})
-                    return {  # Exit immediately if a check determines the username is taken
+                    return {  # Exit if a check determines the username is taken
                         "user": user,
                         "checks": results,
                         "final_status": "taken",
                     }
-                break  # Exit the retry loop once the request is successful
 
             except requests.exceptions.RequestException as e:
                 retries += 1
                 print(f"[!] Error accessing {
                       url} (Attempt {retries}/{max_retries}): {e}")
-                time.sleep(10)  # Wait before retrying
+                time.sleep(10)
 
-        if retries == max_retries:  # If max retries are reached, apply a rate-limit break
+        if retries == max_retries:
             print(f"[!] Max retries reached for {
                   url}. Taking a rate-limit break of {rate_limit_pause} seconds...")
             time.sleep(rate_limit_pause)
             results.append({"url": url, "status": "error"})
-            break  # Exit the retry loop
+            break
 
     # If all checks pass, the username is available
     return {
