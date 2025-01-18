@@ -99,7 +99,7 @@ platforms = {
         "name": "Epic Games",
         "checks": [
             {"url": "https://fortnitetracker.com/api/v2/fortnite/standard/search?platform=epic&query={}&autocomplete=true",
-                "detection": '{"data":[]}'},
+                "detection": '"data": []'},
             {"url": "https://api.tracker.gg/api/v2/rocket-league/standard/search?platform=epic&query={}&autocomplete=true",
                 "detection": '{"data":[]}'}
         ]
