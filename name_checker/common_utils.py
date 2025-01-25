@@ -3,14 +3,6 @@ import random
 import os
 import re
 
-processed_usernames = set()
-
-def mark_username_processed(username):
-    processed_usernames.add(username)
-
-def get_processed_usernames():
-    return processed_usernames
-
 def generate_random_username(length):
     if length < 1:
         raise ValueError("Length must be at least 1")
@@ -61,7 +53,7 @@ def read_usernames_from_file(filename):
     except FileNotFoundError:
         print(f"File '{filename}' not found. Generating random usernames.")
         char_length = int(input("Enter length of characters: ").strip())
-        return [generate_random_username(char_length) for _ in range(1)]
+        return [generate_random_username(char_length) for _ in range(1000)]
     
 def create_indexed_usernames(usernames):
     return [(index, user) for index, user in enumerate(usernames)]

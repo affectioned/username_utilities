@@ -123,15 +123,6 @@ def check_with_playwright(user, checks, max_retries=3, rate_limit_pause=60):
 
                     page = context.new_page()
 
-                    # Define a blocking function for resource types
-                    def should_block(request):
-                        allowed_types = ['document', 'xhr', 'fetch']
-                        return request.resource_type not in allowed_types
-
-                    # Route requests to block unwanted resource types
-                    page.route("**/*", lambda route, request: route.abort()
-                               if should_block(request) else route.continue_())
-
                     # Add stealth behaviors to the page
                     stealth_sync(page)
 

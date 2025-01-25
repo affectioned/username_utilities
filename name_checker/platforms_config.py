@@ -76,7 +76,7 @@ platforms = {
         "name": "Instagram",
         "checks": [
             {"url": "https://www.instagram.com/{}",
-                "detection": '"desktop_show_sign_up_as_primary_cta": false'}
+                "detection": "Sorry, this page isn't available."}
         ]
     },
     "minecraft": {
