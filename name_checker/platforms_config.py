@@ -133,6 +133,13 @@ platforms = {
             {"url": "https://fragment.com/username/{}", "detection": "Unavailable"}
         ]
     },
+    "osu": {
+        "name": "Osu",
+        "checks": [
+            {"url": "https://osu.ppy.sh/users/{}",
+                "detection": 'User not found! ;_;'}
+        ]
+    },
     "exit": {
         "name": "Exit",
         "checks": []
