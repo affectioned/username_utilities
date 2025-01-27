@@ -15,15 +15,6 @@ def write_hits(user, platform_name):
     with open("hits.txt", "a", encoding="utf-8") as f:
         f.write(f"{user} | Available at {platform_name}\n")
 
-    send_webhook(
-        title=f"Username Available: {user}",
-        description=f"The username **{user}** is available on **{platform_name}**.",
-        color=0x00FF00,  # Green color for success
-        footer="*Note: Availability might also mean the username is banned or locked.*",
-        platform_name=platform_name,
-        user=user,
-    )
-
 def debug_requests_endpoint(
     url,
     method="GET",
@@ -137,45 +128,3 @@ def debug_page_content(page_content):
         file.write(page_content)
     print("Page content saved to: debug.html")
     exit
-
-def send_webhook(title, description, color=0x7289DA, footer=None, platform_name=None, user=None):
-    """
-    Sends a styled webhook to a Discord channel.
-
-    Args:
-        title (str): The title of the embed.
-        description (str): The description of the embed.
-        color (int): The color of the embed (default is Discord blue).
-        footer (str, optional): Text to display in the footer of the embed.
-        platform_name (str, optional): The platform where the username is available.
-        user (str, optional): The username being checked.
-    """
-    webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
-    if not webhook_url:
-        raise ValueError("DISCORD_WEBHOOK_URL environment variable is not set.")
-
-    # Ensure non-empty fields
-    fields = []
-    if platform_name:
-        fields.append({"name": "Platform", "value": platform_name, "inline": True})
-    if user:
-        fields.append({"name": "Username", "value": user, "inline": True})
-
-    embed = {
-        "title": title,
-        "description": description,
-        "color": color,
-        "fields": fields,
-    }
-
-    if footer:
-        embed["footer"] = {"text": footer}
-
-    payload = {"embeds": [embed]}
-
-    headers = {"Content-Type": "application/json"}
-
-    response = requests.post(webhook_url, json=payload, headers=headers)
-    if not response.ok:
-        print(f"[!] Failed to send webhook: {response.status_code} - {response.text}")
-    return response

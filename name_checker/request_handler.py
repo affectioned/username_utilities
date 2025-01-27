@@ -33,6 +33,7 @@ def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pa
             continue
 
         detection_pattern = check['detection']
+        method = check['method']
         retries = 0
 
         while retries < max_retries:  # Retry loop
@@ -41,8 +42,8 @@ def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pa
                     proxy_config['password']}@{proxy_config['server']}"
                 proxies = {"http": proxy_url, "https": proxy_url}
 
-                response = requests.get(
-                    url, headers=utils.make_headers(), proxies=proxies)
+                response = requests.request(method,
+                url, headers=utils.make_headers(), proxies=proxies)
                 status_code = response.status_code
 
                 # Handle rate limiting
