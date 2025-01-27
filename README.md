@@ -22,26 +22,6 @@ The **Username Availability Checker** is a tool designed to check the availabili
 -   **Error Handling**: Gracefully handles errors during username checks.
     
 -   **Logging**: Logs available usernames for easy reference.
-    
-
-### Folder Structure:
-
-Copy
-
-name_checker/
-├─ cookie_manager.py
-├─ hits_filter.py
-├─ main.py
-├─ platforms_config.py
-├─ platform_specific/
-│  ├─ discord_checker.py
-│  └─ netease_checker.py
-├─ proxy_manager.py
-├─ request_handler.py
-├─ username_utils.py
-├─ utils.py
-├─ wordlists/
-└─ __pycache__/
 
 ### Usage:
 
@@ -53,7 +33,6 @@ name_checker/
     
 4.  View available usernames in real-time.
     
-
 ----------
 
 ## 2. **Unicode Username Generator** (`username_unicode_generator`)
@@ -69,14 +48,6 @@ The **Unicode Username Generator** is a tool that creates visually similar Unico
 -   **User Input**: Accepts a word as input and outputs all possible variations.
     
 -   **Flexible Use**: Ideal for creating creative usernames or testing Unicode-based edge cases.
-    
-
-### Folder Structure:
-
-Copy
-
-username_unicode_generator/
-└─ generator.py
 
 ### Usage:
 
