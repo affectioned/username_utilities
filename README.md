@@ -1,60 +1,254 @@
 
 # Username Utilities
 
-This repository contains two powerful tools for working with usernames: **Username Availability Checker** and **Unicode Username Generator**. Each tool serves a distinct purpose and can be used independently or together for advanced username-related tasks.
+  
 
-----------
+This repository contains two Python scripts:
 
-## 1. **Username Availability Checker** (`name_checker`)
+  
 
-The **Username Availability Checker** is a tool designed to check the availability of usernames across multiple platforms. It supports both static and dynamic content checks, multi-threading for faster processing, and logging of available usernames.
+1.  **Username Availability Checker** - A tool to check the availability of usernames across multiple platforms.
 
-### Features:
+2.  **Unicode Variations Generator** - A tool to generate variations of a word using homoglyphs (visually similar Unicode characters).
 
--   **Platform Selection**: Choose from a variety of platforms (e.g., Epic Games, Instagram, Twitter, YouTube) to check username availability.
-    
--   **Multi-threading**: Concurrent username checks for faster results.
-    
--   **Dynamic & Static Checks**: Uses Playwright for dynamic platforms and HTTP requests for static ones.
-    
--   **Progress Tracking**: Real-time progress bar for monitoring checks.
-    
--   **Error Handling**: Gracefully handles errors during username checks.
-    
--   **Logging**: Logs available usernames for easy reference.
+  
 
-### Usage:
+---
 
-1.  Navigate to the `name_checker` folder.
-    
-2.  Run `main.py` to start the username checker.
-    
-3.  Select a platform and provide a list of usernames to check.
-    
-4.  View available usernames in real-time.
-    
-----------
+  
 
-## 2. **Unicode Username Generator** (`username_unicode_generator`)
+## Username Availability Checker
 
-The **Unicode Username Generator** is a tool that creates visually similar Unicode variations of a given word by replacing specific characters with their Cyrillic or Greek equivalents. This is useful for generating unique usernames that may bypass restrictions or appear distinct while retaining a similar visual style.
+  
 
-### Features:
+A Python script to check username availability across various platforms using Playwright or HTTP requests.
 
--   **Unicode Mapping**: Replaces Latin characters with visually similar Cyrillic or Greek characters.
-    
--   **Staged Variations**: Generates variations by replacing 1 to N characters in stages.
-    
--   **User Input**: Accepts a word as input and outputs all possible variations.
-    
--   **Flexible Use**: Ideal for creating creative usernames or testing Unicode-based edge cases.
+  
 
-### Usage:
+### Features
 
-1.  Navigate to the `username_unicode_generator` folder.
-    
-2.  Run `generator.py`.
-    
-3.  Enter a word to generate Unicode variations.
-    
-4.  View and use the generated variations.
+  
+
+- Supports multiple platforms (e.g., Epic Games, Instagram, Twitter, YouTube, etc.).
+
+- Logs available usernames.
+
+- Utilizes proxy configuration for enhanced privacy.
+
+- Displays a progress bar for tracking checks.
+
+  
+
+### Requirements
+
+  
+
+- Python 3+
+
+- Required Python packages (install with pip):
+
+```bash
+pip install -r requirements.txt
+```
+
+  
+
+### Usage
+
+  
+
+1.  **Clone the repository:**
+
+```bash
+git clone https://github.com/affectioned/username_utilities.git
+
+cd username_utilities
+```
+
+  
+
+2.  **Install dependencies:**
+
+```bash
+pip install -r requirements.txt
+```
+
+  
+
+3.  **Run the script:**
+
+```bash
+python main.py
+```
+
+  
+
+4.  **Follow the prompts to select a platform and start checking usernames.**
+
+  
+
+### Configuration
+
+  
+
+-  **Platforms**: Edit the `platforms_config.py` file to add or modify platform checks.
+
+-  **Proxy Settings**: Customize proxy configuration in `proxy_manager.py`.
+
+  
+
+### Example Output
+
+  
+
+```plaintext
+Choose a platform to check usernames:
+
+[xbox] Xbox
+
+[roblox] Roblox
+
+[telegram] Telegram
+
+[exit] Exit
+
+  
+
+Enter your choice (e.g., xbox, roblox, telegram, or exit to exit): xbox
+
+- Selected platform: Xbox
+
+- Checks to perform: ['https://xbox.com/check']
+
+  
+
+Checking usernames: ████████████████ 100%
+
+[+] Available: username123 on Xbox
+
+[!] Error checking username456: Connection timeout
+```
+
+  
+
+---
+
+  
+
+## Unicode Variations Generator
+
+  
+
+A Python script to generate variations of a word by replacing characters with visually similar Unicode characters (e.g., Cyrillic, Greek).
+
+  
+
+### Features
+
+  
+
+- Creates variations of a word using visually similar Unicode characters.
+
+- Generates variations in stages, with each stage having a different number of character replacements.
+
+- Useful for testing Unicode normalization or identifying lookalike text.
+
+  
+
+### Usage
+
+  
+
+1.  **Run the script:**
+
+```bash
+python generator.py
+```
+
+  
+
+2.  **Enter a word when prompted:**
+
+```plaintext
+Enter a word: example
+```
+
+  
+
+3.  **View the generated variations:** Variations will be displayed in stages, with each stage representing the number of replaced characters.
+
+  
+
+### Example Output
+
+  
+
+```plaintext
+Enter a word: test
+
+  
+
+Variations with 1 character(s) replaced:
+
+[1] Τest
+
+[2] tеst
+
+[3] teѕt
+
+[4] tesΤ
+
+  
+
+Variations with 2 character(s) replaced:
+
+[5] Τеst
+
+[6] Τeѕt
+
+[7] ΤesΤ
+
+[8] tеѕt
+
+[9] tеsΤ
+
+[10] teѕΤ
+
+  
+
+Variations with 3 character(s) replaced:
+
+[11] Τеѕt
+
+[12] ΤеsΤ
+
+[13] ΤeѕΤ
+
+[14] tеѕΤ
+
+  
+
+Variations with 4 character(s) replaced:
+
+[15] ΤеѕΤ
+```
+
+  
+
+### Configuration
+
+  
+
+-  **Unicode Map**: The `unicode_map` dictionary defines the character replacements. You can extend or modify it to include additional mappings.
+
+  
+
+---
+
+  
+
+## License
+
+  
+
+This project is licensed under the MIT License.
