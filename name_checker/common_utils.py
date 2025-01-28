@@ -2,6 +2,35 @@ import string
 import random
 import os
 import re
+import requests
+
+def filter_vulgar_words(words):
+    """
+    Filters out vulgar words from a list of words using an online vulgar words list.
+
+    Parameters:
+    words (list): A list of words to filter.
+
+    Returns:
+    list: A filtered list of words without vulgarisms.
+    """
+    # URL of the vulgar words list
+    vulgar_words_url = "https://www.cs.cmu.edu/~biglou/resources/bad-words.txt"
+    
+    try:
+        # Fetch the list of vulgar words
+        response = requests.get(vulgar_words_url)
+        response.raise_for_status()  # Raise an error for unsuccessful requests
+        vulgarisms = set(response.text.splitlines())
+        
+        # Filter out words that match any vulgarism (case-insensitive)
+        filtered_words = [word for word in words if word.lower() not in vulgarisms]
+        
+        return filtered_words
+    
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching vulgar words list: {e}")
+        return words  # Return the original list if fetching fails
 
 def generate_random_username(length):
     if length < 1:
@@ -46,10 +75,14 @@ def read_usernames_from_file(filename):
             usernames = file.readlines()
             print(f"Usernames to check: {len(usernames)}")
         # Filter and process usernames
-        filtered_usernames = [username.strip().lower() for username in usernames if len(username.strip()) >= 6 and re.match("^[A-Za-z]+$", username.strip())]
+        valid_usernames = [username.strip().lower() for username in usernames if len(username.strip()) >= 3 and re.match("^[A-Za-z]+$", username.strip())]
+        
+        # Filter out vulgar usernames
+        sanitized_usernames = filter_vulgar_words(valid_usernames)
+
         # Shuffle the usernames
-        random.shuffle(filtered_usernames)
-        return filtered_usernames
+        random.shuffle(sanitized_usernames)
+        return sanitized_usernames
     except FileNotFoundError:
         print(f"File '{filename}' not found. Generating random usernames.")
         char_length = int(input("Enter length of characters: ").strip())

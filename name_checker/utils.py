@@ -1,5 +1,5 @@
 import requests
-import os
+from fake_headers import Headers
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -89,18 +89,12 @@ def debug_requests_endpoint(
         print(f"An error occurred while making the request: {e}")
 
 def make_headers():
-    headers = {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-        "Connection": "keep-alive",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0",
-        "Upgrade-Insecure-Requests": "1",
-        "Accept-Encoding": "gzip, deflate, br, zstd",
-        "Accept-Language": "en-US,en;q=0.9,en-CH;q=0.8",
-        'DNT': '1',  # Do Not Track
-        'Sec-GPC': '1',  # Global Privacy Control
-    }
-
-    return headers
+    header = Headers(
+        browser="chrome",  # Generate only Chrome UA
+        os="win",  # Generate ony Windows platform
+        headers=True  # generate misc headers
+    )
+    return header.generate()
 
 def generate_variations(word, url_format):
     # Platform-specific variation handling
