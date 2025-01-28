@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 def write_hits(user, platform_name):
     """
     Writes the available username to a file and sends a styled webhook message.
@@ -14,6 +15,7 @@ def write_hits(user, platform_name):
     """
     with open("hits.txt", "a", encoding="utf-8") as f:
         f.write(f"{user} | Available at {platform_name}\n")
+
 
 def debug_requests_endpoint(
     url,
@@ -27,7 +29,7 @@ def debug_requests_endpoint(
 ):
     """
     Debug a requests endpoint with improved error handling and logging.
-    
+
     Args:
         url (str): The URL to request.
         method (str): HTTP method to use (GET, POST, PUT, DELETE, etc.).
@@ -41,7 +43,6 @@ def debug_requests_endpoint(
     headers = headers or make_headers()
 
     try:
-        # Make the request
         response = requests.request(
             method=method,
             url=url,
@@ -51,7 +52,7 @@ def debug_requests_endpoint(
             data=data,
             json=json,
         )
-        
+
         # Log request details
         print(f"Request Method: {method}")
         print(f"URL: {response.url}")
@@ -88,6 +89,7 @@ def debug_requests_endpoint(
     except requests.exceptions.RequestException as e:
         print(f"An error occurred while making the request: {e}")
 
+
 def make_headers():
     header = Headers(
         browser="chrome",  # Generate only Chrome UA
@@ -95,6 +97,7 @@ def make_headers():
         headers=True  # generate misc headers
     )
     return header.generate()
+
 
 def generate_variations(word, url_format):
     # Platform-specific variation handling
@@ -106,16 +109,20 @@ def generate_variations(word, url_format):
         variations.append(word[:i] + character + word[i:])
     return variations
 
+
 def validate_variation_choice():
-    check_variations = input("Do you want to check with platform-supported variations? (y/n): ").strip().lower()
+    check_variations = input(
+        "Do you want to check with platform-supported variations? (y/n): ").strip().lower()
     if check_variations not in ["yes", "no", "y", "n"]:
         print("Invalid input. Please type 'yes' or 'no'.")
         exit()
     return check_variations in ["yes", "y"]
 
+
 def print_progress(current_index, total_count, message):
     percentage = (current_index + 1) / total_count * 100
     print(f"[{current_index + 1}/{total_count}] ({percentage:.2f}%) {message}")
+
 
 def debug_page_content(page_content):
     with open("debug.html", "w", encoding="utf-8") as file:
