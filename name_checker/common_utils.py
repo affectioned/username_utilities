@@ -75,7 +75,13 @@ def read_usernames_from_file(filename):
             usernames = file.readlines()
             print(f"Usernames to check: {len(usernames)}")
         # Filter and process usernames
-        valid_usernames = [username.strip().lower() for username in usernames if len(username.strip()) >= 3 and re.match("^[A-Za-z]+$", username.strip())]
+        valid_usernames = [
+            username.strip().lower()
+            for username in usernames
+            if len(username.strip()) >= 3 and
+               re.match("^[A-Za-z]+$", username.strip()) and
+               " " not in username.strip()
+        ]
         
         # Filter out vulgar usernames
         sanitized_usernames = filter_vulgar_words(valid_usernames)
