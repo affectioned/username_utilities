@@ -146,10 +146,17 @@ platforms = {
         ]
     },
     "lovense": {
-        "name": "lovense",
+        "name": "Lovense",
         "checks": [
             {"url": "https://www.lovense.com/ajaxCheckIdentityRegisted?identity={}",
                 "detection": 'The account does not exist or the password is incorrect, please try again', "method": "POST"}
+        ]
+    },
+    "chesscom": {
+        "name": "Chess.com",
+        "checks": [
+            {"url": "https://www.chess.com/member/{}",
+                "detection": '404 Page not found', "method": "GET"}
         ]
     },
     "exit": {
