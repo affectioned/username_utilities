@@ -1,4 +1,5 @@
 import requests
+import os
 from fake_headers import Headers
 from dotenv import load_dotenv
 
@@ -79,10 +80,14 @@ def debug_requests_endpoint(
             except ValueError:
                 print("Invalid JSON in response.")
 
+        output_file = "response_output.txt"
+
         # Save response text to a file
-        with open("response_output.txt", "w", encoding="utf-8") as f:
+        if os.path.exists(output_file):
+            os.remove(output_file)
+        with open(output_file, "w", encoding="utf-8") as f:
             f.write(response.text)
-        print("Response text saved to response_output.txt")
+        print(f"Response text saved to {output_file}")
 
         return response
 

@@ -20,7 +20,7 @@ def check_username(user, platform, pbar):
     try:
         result = ""
         proxy_config = get_proxy_config()
-        if platform["name"] in ["Epic Games", "Instagram", "Twitter", "YouTube"]:
+        if platform["name"] in ["Epic Games", "Instagram", "YouTube"]:
             result = check_with_playwright(user, platform["checks"])
         else:
             result = check_with_requests(user, platform["checks"], proxy_config)

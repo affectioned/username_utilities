@@ -43,7 +43,7 @@ def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pa
                 proxies = {"http": proxy_url, "https": proxy_url}
 
                 response = requests.request(method,
-                                            url, headers=utils.make_headers(), proxies=proxies)
+                                            url, headers=utils.make_headers(), proxies=proxies, allow_redirects=True)
                 status_code = response.status_code
 
                 # Handle rate limiting

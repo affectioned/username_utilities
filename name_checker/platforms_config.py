@@ -53,10 +53,10 @@ platforms = {
         ]
     },
     "twitter": {
-        "name": "twitter",
+        "name": "Twitter",
         "checks": [
-            {"url": "https://x.com/{}",
-                "detection": "This account doesn’t exist", "method": "GET"}
+            {"url": "https://nitter.net/{}",
+                "detection": "not found</span>", "method": "GET"}
         ]
     },
     "steam_groups": {
@@ -69,7 +69,7 @@ platforms = {
     "youtube": {
         "name": "YouTube",
         "checks": [
-            {"url": "https://www.youtube.com/@{}",
+            {"url": "https://youtube.com/@{}",
                 "detection": "error?src=404&amp", "method": "GET"}
         ]
     },
