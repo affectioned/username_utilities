@@ -145,18 +145,37 @@ platforms = {
                 "detection": 'User not found! ;_;', "method": "GET"}
         ]
     },
+
     "lovense": {
         "name": "Lovense",
         "checks": [
-            {"url": "https://www.lovense.com/ajaxCheckIdentityRegisted?identity={}",
-                "detection": 'The account does not exist or the password is incorrect, please try again', "method": "POST"}
+            {
+                "url": "https://www.lovense.com/ajaxCheckIdentityRegisted",
+                "method": "POST",
+                "data": {"identity": "{}"},
+                "detection": "The account does not exist or the password is incorrect, please try again"
+            }
         ]
     },
     "chesscom": {
         "name": "Chess.com",
         "checks": [
-            {"url": "https://www.chess.com/member/{}",
-                "detection": '404 Page not found', "method": "GET"}
+            {
+                "url": "https://www.chess.com/member/{}",
+                "method": "GET",
+                "detection": "404 Page not found"
+            }
+        ]
+    },
+    "discord": {
+        "name": "Discord",
+        "checks": [
+            {
+                "url": "https://discord.com/api/v9/unique-username/username-attempt-unauthed",
+                "method": "POST",
+                "json": {"username": "{}"},
+                "detection": "'taken': False"
+            }
         ]
     },
     "exit": {

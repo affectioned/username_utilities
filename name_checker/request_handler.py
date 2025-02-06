@@ -42,8 +42,34 @@ def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pa
                     proxy_config['password']}@{proxy_config['server']}"
                 proxies = {"http": proxy_url, "https": proxy_url}
 
-                response = requests.request(method,
-                                            url, headers=utils.make_headers(), proxies=proxies, allow_redirects=True)
+                headers = utils.make_headers()
+
+                # Ensure Content-Type is set for Discord
+                if "discord" in url:
+                    headers["Content-Type"] = "application/json"
+
+                # Handle `data` or `json` dynamically
+                request_kwargs = {
+                    "method": method,
+                    "url": url,
+                    "headers": headers,
+                    "proxies": proxies,
+                    "allow_redirects": True
+                }
+
+                if "data" in check:
+                    request_kwargs["data"] = {
+                        key: value.format(*(user,) * value.count("{}")) if isinstance(value, str) else value
+                        for key, value in check["data"].items()
+                    }
+                elif "json" in check:
+                    request_kwargs["json"] = {
+                        key: value.format(*(user,) * value.count("{}")) if isinstance(value, str) else value
+                        for key, value in check["json"].items()
+                    }
+                
+                response = requests.request(**request_kwargs)
+
                 status_code = response.status_code
 
                 # Handle rate limiting

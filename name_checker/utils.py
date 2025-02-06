@@ -21,10 +21,10 @@ def write_hits(user, platform_name):
 def debug_requests_endpoint(
     url,
     method="GET",
+    data=None,
     headers=None,
     cookies=None,
     params=None,
-    data=None,
     json=None,
     exit_on_complete=True,
 ):
@@ -98,10 +98,12 @@ def debug_requests_endpoint(
 def make_headers():
     header = Headers(
         browser="chrome",  # Generate only Chrome UA
-        os="win",  # Generate ony Windows platform
-        headers=True  # generate misc headers
+        os="win",  # Generate only Windows platform
+        headers=True  # Generate misc headers
     )
-    return header.generate()
+    generated_headers = header.generate()
+    
+    return generated_headers
 
 
 def generate_variations(word, url_format):
