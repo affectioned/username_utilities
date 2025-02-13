@@ -1,10 +1,7 @@
-state.json
 cookies.txt
 .git
 .json
 .env
 *.pyc
 test.py
-debug.html
-*.txt
 hits.txt
