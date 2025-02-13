@@ -1,9 +1,115 @@
 import utils
 import requests
 import time
+import httpx
 from playwright.sync_api import sync_playwright
 from cookie_manager import add_cookies
 
+def check_with_httpx(user, checks, proxy_config, max_retries=3, rate_limit_pause=60):
+    """
+    Check the availability of a username by processing multiple URL checks using httpx.
+
+    Args:
+        user (str): The username to check.
+        checks (list): A list of checks, each a dictionary with 'url', 'detection', and 'method' keys.
+        proxy_config (dict): Proxy configuration with keys 'username', 'password', and 'server'.
+        max_retries (int): Maximum number of retries for each request. Defaults to 3.
+        rate_limit_pause (int): Time to pause (in seconds) after multiple consecutive failures. Defaults to 60.
+    
+    Returns:
+        dict: A dictionary containing the availability status and details for each check.
+    """
+    results = []
+
+    for check in checks:
+        try:
+            # Replace placeholders with `user`
+            url = check['url'].format(*(user,) * check['url'].count("{}"))
+        except IndexError as e:
+            print(f"[!] Error formatting URL: {check['url']}, user: {user}. Error: {e}")
+            results.append({"url": check['url'], "status": "error"})
+            continue
+
+        detection_pattern = check['detection']
+        method = check['method']
+        retries = 0
+
+        while retries < max_retries:
+            try:
+                proxy_url = f"http://{proxy_config['username']}:{proxy_config['password']}@{proxy_config['server']}"
+                proxies = {
+                    "http://": proxy_url,
+                    "https://": proxy_url,
+                }
+
+                headers = utils.make_headers()
+
+                # Ensure Content-Type is set for Discord if needed
+                if "discord" in url:
+                    headers["Content-Type"] = "application/json"
+
+                # Prepare request arguments
+                request_kwargs = {
+                    "method": method,
+                    "url": url,
+                    "headers": headers,
+                    "proxies": proxies,
+                    "follow_redirects": True,
+                }
+
+                # Handle dynamic `data` or `json` payloads
+                if "data" in check:
+                    request_kwargs["data"] = {
+                        key: value.format(*(user,) * value.count("{}")) if isinstance(value, str) else value
+                        for key, value in check["data"].items()
+                    }
+                elif "json" in check:
+                    request_kwargs["json"] = {
+                        key: value.format(*(user,) * value.count("{}")) if isinstance(value, str) else value
+                        for key, value in check["json"].items()
+                    }
+
+                response = httpx.request(**request_kwargs)
+                status_code = response.status_code
+
+                # Handle rate limiting
+                if status_code == 429:
+                    retry_after = int(response.headers.get("Retry-After", rate_limit_pause))
+                    print(f"[!] Rate limited for {url}. Retrying after {retry_after} seconds...")
+                    time.sleep(retry_after)
+                    continue
+
+                # Process response
+                if status_code == 404:
+                    results.append({"url": url, "status": "available"})
+                    break  # Proceed to next check
+                elif status_code == 200 and detection_pattern in response.text:
+                    results.append({"url": url, "status": "available"})
+                    break
+                else:
+                    results.append({"url": url, "status": "taken"})
+                    return {
+                        "user": user,
+                        "checks": results,
+                        "final_status": "taken",
+                    }
+
+            except httpx.RequestError as e:
+                retries += 1
+                print(f"[!] Error accessing {url} (Attempt {retries}/{max_retries}): {e}")
+                time.sleep(10)
+
+        if retries == max_retries:
+            print(f"[!] Max retries reached for {url}. Taking a rate-limit break of {rate_limit_pause} seconds...")
+            time.sleep(rate_limit_pause)
+            results.append({"url": url, "status": "error"})
+            break
+
+    return {
+        "user": user,
+        "checks": results,
+        "final_status": "available",
+    }
 
 def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pause=60):
     """
