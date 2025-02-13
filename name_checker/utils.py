@@ -17,7 +17,6 @@ def write_hits(user, platform_name):
     with open("hits.txt", "a", encoding="utf-8") as f:
         f.write(f"{user} | Available at {platform_name}\n")
 
-
 def debug_requests_endpoint(
     url,
     method="GET",
@@ -25,8 +24,7 @@ def debug_requests_endpoint(
     headers=None,
     cookies=None,
     params=None,
-    json=None,
-    exit_on_complete=True,
+    json=None
 ):
     """
     Debug a requests endpoint with improved error handling and logging.
@@ -38,9 +36,8 @@ def debug_requests_endpoint(
         params (dict): Query parameters for the request.
         data (dict): Form-encoded data for the request body.
         json (dict): JSON payload for the request body.
-        exit_on_complete (bool): Whether to exit the program after debugging.
     """
-    # Use utility function for headers if not provided
+    # Ensure headers exist and enforce English language preference
     headers = headers or make_headers()
 
     try:
@@ -68,7 +65,7 @@ def debug_requests_endpoint(
         print(f"Status Code: {response.status_code}")
         print(f"Headers: {response.headers}")
         print(f"Elapsed Time: {response.elapsed}")
-        print(f"Content-Lenght: {len(response.text)}")
+        print(f"Content-Length: {len(response.text)}")
         print("Response Text:")
         print(response.text)
 
@@ -94,7 +91,6 @@ def debug_requests_endpoint(
     except requests.exceptions.RequestException as e:
         print(f"An error occurred while making the request: {e}")
 
-
 def make_headers():
     header = Headers(
         browser="chrome",  # Generate only Chrome UA
@@ -102,7 +98,6 @@ def make_headers():
         headers=True  # Generate misc headers
     )
     generated_headers = header.generate()
-    
     return generated_headers
 
 

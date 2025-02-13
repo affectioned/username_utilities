@@ -178,6 +178,16 @@ platforms = {
             }
         ]
     },
+    "paypal":{
+        "name": "Paypal Me",
+        "checks":[
+            {
+                "url": "https://paypal.me/{}?locale.x=en_US",
+                "method" : "GET",
+                "detection" : '<meta name="twitter:title" content="Get your very own PayPal.Me link" />'
+            }
+        ]
+    },
     "exit": {
         "name": "Exit",
         "checks": []
