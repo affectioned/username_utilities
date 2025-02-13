@@ -21,7 +21,7 @@ def check_username(user, platform, pbar):
         result = ""
         proxy_config = get_proxy_config()
         if platform["name"] in ["Epic Games", "Instagram", "YouTube"]:
-            result = check_with_playwright(user, platform["checks"])
+            result = check_with_playwright(user, platform["checks"], proxy_config)
         else:
             result = check_with_requests(user, platform["checks"], proxy_config)
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
 
     try:
         with tqdm(total=total_count, desc="Checking usernames", unit="user") as pbar:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=12) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
                 # Submit tasks individually
                 future_to_user = {
                     executor.submit(

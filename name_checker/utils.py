@@ -1,5 +1,6 @@
-import requests
 import os
+import requests
+from playwright.sync_api import sync_playwright
 from fake_headers import Headers
 from dotenv import load_dotenv
 
@@ -16,6 +17,40 @@ def write_hits(user, platform_name):
     """
     with open("hits.txt", "a", encoding="utf-8") as f:
         f.write(f"{user} | Available at {platform_name}\n")
+
+
+def debug_playwright_response(url, proxy_config):
+    try:
+        with sync_playwright() as playwright:
+
+            chromium = playwright.chromium # or "firefox" or "webkit".
+            browser = chromium.launch(headless=False, proxy=proxy_config)
+            context = browser.new_context(locale='en-US')
+            page = context.new_page()
+
+            # Navigate to the URL
+            response = page.goto(url, wait_until="load", timeout=60000)
+            page_content = page.content()
+
+            print(f"URL: {url}")
+            print(f"Headers: {response.all_headers()}")
+            print(f"Status Code: {response.status}")
+            print(f"Status Text: {page_content}")
+            print(f"Response: {response}")
+
+            output_file = "response_output.txt"
+
+            # Save response text to a file
+            if os.path.exists(output_file):
+                os.remove(output_file)
+            with open(output_file, "w", encoding="utf-8") as f:
+                f.write(page_content)
+            print(f"Response text saved to {output_file}")
+
+            return page_content
+
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred while making the request: {e}")
 
 def debug_requests_endpoint(
     url,
@@ -91,6 +126,7 @@ def debug_requests_endpoint(
     except requests.exceptions.RequestException as e:
         print(f"An error occurred while making the request: {e}")
 
+
 def make_headers():
     header = Headers(
         browser="chrome",  # Generate only Chrome UA
@@ -99,26 +135,6 @@ def make_headers():
     )
     generated_headers = header.generate()
     return generated_headers
-
-
-def generate_variations(word, url_format):
-    # Platform-specific variation handling
-    character = "."
-    if "roblox" or "soundcloud" in url_format:
-        character = "_"
-    variations = []
-    for i in range(1, len(word)):  # Start from index 1 and stop before the last character
-        variations.append(word[:i] + character + word[i:])
-    return variations
-
-
-def validate_variation_choice():
-    check_variations = input(
-        "Do you want to check with platform-supported variations? (y/n): ").strip().lower()
-    if check_variations not in ["yes", "no", "y", "n"]:
-        print("Invalid input. Please type 'yes' or 'no'.")
-        exit()
-    return check_variations in ["yes", "y"]
 
 
 def print_progress(current_index, total_count, message):

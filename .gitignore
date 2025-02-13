@@ -5,3 +5,4 @@ cookies.txt
 *.pyc
 test.py
 hits.txt
+response_output.txt
