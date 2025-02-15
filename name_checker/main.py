@@ -4,6 +4,7 @@ import common_utils
 from platforms_config import platforms
 from request_handler import check_with_playwright
 from request_handler import check_with_requests
+from request_handler import check_with_httpx
 from proxy_manager import get_proxy_config
 from tqdm import tqdm  # Import tqdm for progress bar
 
@@ -20,10 +21,10 @@ def check_username(user, platform, pbar):
     try:
         result = ""
         proxy_config = get_proxy_config()
-        if platform["name"] in ["Epic Games", "Instagram", "YouTube"]:
+        if platform["name"] in ["Epic Games", "Instagram", "YouTube", "Ubisoft"]:
             result = check_with_playwright(user, platform["checks"], proxy_config)
         else:
-            result = check_with_requests(user, platform["checks"], proxy_config)
+            result = check_with_httpx(user, platform["checks"], proxy_config)
 
         # Log the result only if the username is available
         if result["final_status"] == "available":

@@ -188,6 +188,16 @@ platforms = {
             }
         ]
     },
+    "ubisoft": {
+        "name": "Ubisoft",
+        "checks": [
+            {
+                "url": "https://api.tracker.gg/api/v2/r6siege/standard/search?platform=ubi&query={}&autocomplete=true", 
+                "method": "GET",
+                "detection": '{"data":[]}'
+            }
+        ]
+    },
     "exit": {
         "name": "Exit",
         "checks": []

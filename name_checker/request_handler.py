@@ -4,6 +4,7 @@ import time
 import httpx
 from playwright.sync_api import sync_playwright
 from cookie_manager import add_cookies
+from playwright_stealth import stealth_sync
 
 def check_with_httpx(user, checks, proxy_config, max_retries=3, rate_limit_pause=60):
     """
@@ -37,23 +38,15 @@ def check_with_httpx(user, checks, proxy_config, max_retries=3, rate_limit_pause
         while retries < max_retries:
             try:
                 proxy_url = f"http://{proxy_config['username']}:{proxy_config['password']}@{proxy_config['server']}"
-                proxies = {
-                    "http://": proxy_url,
-                    "https://": proxy_url,
-                }
 
                 headers = utils.make_headers()
-
-                # Ensure Content-Type is set for Discord if needed
-                if "discord" in url:
-                    headers["Content-Type"] = "application/json"
 
                 # Prepare request arguments
                 request_kwargs = {
                     "method": method,
                     "url": url,
                     "headers": headers,
-                    "proxies": proxies,
+                    "proxy": proxy_url,
                     "follow_redirects": True,
                 }
 
@@ -244,13 +237,16 @@ def check_with_playwright(user, checks, proxy_config, max_retries=3, rate_limit_
         while retries < max_retries:  # Retry loop
             try:
                 with sync_playwright() as playwright:
-                    browser = playwright.chromium.launch(headless=True, proxy=proxy_config)
+                    chromium = playwright.chromium # or "firefox" or "webkit".
+                    browser = chromium.launch(headless=True, proxy=proxy_config)
                     context = browser.new_context(locale='en-US')
 
                     # Add cookies if necessary
                     add_cookies(context, url)
 
                     page = context.new_page()
+
+                    stealth_sync(page)
 
                     # Navigate to the URL
                     response = page.goto(url, wait_until="load", timeout=60000)
