@@ -198,6 +198,16 @@ platforms = {
             }
         ]
     },
+    "throne": {
+        "name": "Throne",
+        "checks": [
+            {
+                "url": "https://throne.com/{}", 
+                "method": "GET",
+                "detection": 'Creator not found'
+            }
+        ]
+    },
     "exit": {
         "name": "Exit",
         "checks": []

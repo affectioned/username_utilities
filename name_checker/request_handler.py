@@ -6,6 +6,7 @@ from playwright.sync_api import sync_playwright
 from cookie_manager import add_cookies
 from playwright_stealth import stealth_sync
 
+
 def check_with_httpx(user, checks, proxy_config, max_retries=3, rate_limit_pause=60):
     """
     Check the availability of a username by processing multiple URL checks using httpx.
@@ -16,7 +17,7 @@ def check_with_httpx(user, checks, proxy_config, max_retries=3, rate_limit_pause
         proxy_config (dict): Proxy configuration with keys 'username', 'password', and 'server'.
         max_retries (int): Maximum number of retries for each request. Defaults to 3.
         rate_limit_pause (int): Time to pause (in seconds) after multiple consecutive failures. Defaults to 60.
-    
+
     Returns:
         dict: A dictionary containing the availability status and details for each check.
     """
@@ -27,7 +28,8 @@ def check_with_httpx(user, checks, proxy_config, max_retries=3, rate_limit_pause
             # Replace placeholders with `user`
             url = check['url'].format(*(user,) * check['url'].count("{}"))
         except IndexError as e:
-            print(f"[!] Error formatting URL: {check['url']}, user: {user}. Error: {e}")
+            print(
+                f"[!] Error formatting URL: {check['url']}, user: {user}. Error: {e}")
             results.append({"url": check['url'], "status": "error"})
             continue
 
@@ -44,31 +46,36 @@ def check_with_httpx(user, checks, proxy_config, max_retries=3, rate_limit_pause
                 # Prepare request arguments
                 request_kwargs = {
                     "method": method,
-                    "url": url,
                     "headers": headers,
-                    "proxy": proxy_url,
+                    "url": url,
                     "follow_redirects": True,
                 }
 
                 # Handle dynamic `data` or `json` payloads
                 if "data" in check:
                     request_kwargs["data"] = {
-                        key: value.format(*(user,) * value.count("{}")) if isinstance(value, str) else value
+                        key: value.format(
+                            *(user,) * value.count("{}")) if isinstance(value, str) else value
                         for key, value in check["data"].items()
                     }
                 elif "json" in check:
                     request_kwargs["json"] = {
-                        key: value.format(*(user,) * value.count("{}")) if isinstance(value, str) else value
+                        key: value.format(
+                            *(user,) * value.count("{}")) if isinstance(value, str) else value
                         for key, value in check["json"].items()
                     }
 
-                response = httpx.request(**request_kwargs)
+                with httpx.Client(proxy=proxy_url) as session:
+                    response = session.request(**request_kwargs)
+                    
                 status_code = response.status_code
 
                 # Handle rate limiting
                 if status_code == 429:
-                    retry_after = int(response.headers.get("Retry-After", rate_limit_pause))
-                    print(f"[!] Rate limited for {url}. Retrying after {retry_after} seconds...")
+                    retry_after = int(response.headers.get(
+                        "Retry-After", rate_limit_pause))
+                    print(
+                        f"[!] Rate limited for {url}. Retrying after {retry_after} seconds...")
                     time.sleep(retry_after)
                     continue
 
@@ -89,11 +96,13 @@ def check_with_httpx(user, checks, proxy_config, max_retries=3, rate_limit_pause
 
             except httpx.RequestError as e:
                 retries += 1
-                print(f"[!] Error accessing {url} (Attempt {retries}/{max_retries}): {e}")
+                print(
+                    f"[!] Error accessing {url} (Attempt {retries}/{max_retries}): {e}")
                 time.sleep(10)
 
         if retries == max_retries:
-            print(f"[!] Max retries reached for {url}. Taking a rate-limit break of {rate_limit_pause} seconds...")
+            print(
+                f"[!] Max retries reached for {url}. Taking a rate-limit break of {rate_limit_pause} seconds...")
             time.sleep(rate_limit_pause)
             results.append({"url": url, "status": "error"})
             break
@@ -103,6 +112,7 @@ def check_with_httpx(user, checks, proxy_config, max_retries=3, rate_limit_pause
         "checks": results,
         "final_status": "available",
     }
+
 
 def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pause=60):
     """
@@ -156,15 +166,17 @@ def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pa
 
                 if "data" in check:
                     request_kwargs["data"] = {
-                        key: value.format(*(user,) * value.count("{}")) if isinstance(value, str) else value
+                        key: value.format(
+                            *(user,) * value.count("{}")) if isinstance(value, str) else value
                         for key, value in check["data"].items()
                     }
                 elif "json" in check:
                     request_kwargs["json"] = {
-                        key: value.format(*(user,) * value.count("{}")) if isinstance(value, str) else value
+                        key: value.format(
+                            *(user,) * value.count("{}")) if isinstance(value, str) else value
                         for key, value in check["json"].items()
                     }
-                
+
                 response = requests.request(**request_kwargs)
 
                 status_code = response.status_code
@@ -213,6 +225,7 @@ def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pa
         "final_status": "available",
     }
 
+
 def check_with_playwright(user, checks, proxy_config, max_retries=3, rate_limit_pause=60):
     """
     Check the availability of a resource using Playwright, handling rate limits.
@@ -237,8 +250,9 @@ def check_with_playwright(user, checks, proxy_config, max_retries=3, rate_limit_
         while retries < max_retries:  # Retry loop
             try:
                 with sync_playwright() as playwright:
-                    chromium = playwright.chromium # or "firefox" or "webkit".
-                    browser = chromium.launch(headless=True, proxy=proxy_config)
+                    chromium = playwright.chromium  # or "firefox" or "webkit".
+                    browser = chromium.launch(
+                        headless=True, proxy=proxy_config)
                     context = browser.new_context(locale='en-US')
 
                     # Add cookies if necessary
@@ -254,8 +268,10 @@ def check_with_playwright(user, checks, proxy_config, max_retries=3, rate_limit_
 
                     # Handle rate limiting (429 Too Many Requests)
                     if response.status == 429:
-                        retry_after = int(response.headers.get("Retry-After", rate_limit_pause))
-                        print(f"[!] Rate limited for {url}. Retrying after {retry_after} seconds...")
+                        retry_after = int(response.headers.get(
+                            "Retry-After", rate_limit_pause))
+                        print(
+                            f"[!] Rate limited for {url}. Retrying after {retry_after} seconds...")
                         time.sleep(retry_after)
                         continue  # Retry after waiting
 
@@ -278,7 +294,8 @@ def check_with_playwright(user, checks, proxy_config, max_retries=3, rate_limit_
 
             except Exception as e:
                 retries += 1
-                print(f"[!] Error accessing {url} (Attempt {retries}/{max_retries}): {e}")
+                print(
+                    f"[!] Error accessing {url} (Attempt {retries}/{max_retries}): {e}")
                 time.sleep(10)  # Wait before retrying
 
         if retries == max_retries:
