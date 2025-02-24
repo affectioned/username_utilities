@@ -36,20 +36,16 @@ def generate_random_username(length):
     if length < 1:
         raise ValueError("Length must be at least 1")
 
-    # Ensure at least one letter
-    guaranteed_letter = random.choice(string.ascii_lowercase)
+    # Ensure the first character is a letter
+    first_letter = random.choice(string.ascii_lowercase)
 
     # Generate the rest of the username
     remaining_length = length - 1
     remaining_characters = ''.join(random.choices(
         string.ascii_lowercase + string.digits, k=remaining_length))
 
-    # Combine the guaranteed letter with the rest and shuffle
-    username = guaranteed_letter + remaining_characters
-    # Shuffle to randomize position
-    username = ''.join(random.sample(username, len(username)))
-
-    return username
+    # Combine and return
+    return first_letter + remaining_characters
 
 def load_usernames():
     """Prompt the user for a file and load usernames."""

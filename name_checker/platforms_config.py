@@ -178,13 +178,13 @@ platforms = {
             }
         ]
     },
-    "paypal":{
+    "paypal": {
         "name": "Paypal Me",
-        "checks":[
+        "checks": [
             {
                 "url": "https://paypal.me/{}?locale.x=en_US",
-                "method" : "GET",
-                "detection" : '<meta name="twitter:title" content="Get your very own PayPal.Me link" />'
+                "method": "GET",
+                "detection": '<meta name="twitter:title" content="Get your very own PayPal.Me link" />'
             }
         ]
     },
@@ -192,7 +192,7 @@ platforms = {
         "name": "Ubisoft",
         "checks": [
             {
-                "url": "https://api.tracker.gg/api/v2/r6siege/standard/search?platform=ubi&query={}&autocomplete=true", 
+                "url": "https://api.tracker.gg/api/v2/r6siege/standard/search?platform=ubi&query={}&autocomplete=true",
                 "method": "GET",
                 "detection": '{"data":[]}'
             }
@@ -202,9 +202,29 @@ platforms = {
         "name": "Throne",
         "checks": [
             {
-                "url": "https://throne.com/{}", 
+                "url": "https://throne.com/{}",
                 "method": "GET",
                 "detection": 'Creator not found'
+            }
+        ]
+    },
+    "booth_pm": {
+        "name": "Booth.pm",
+        "checks": [
+            {
+                "url": "https://{}.booth.pm/",
+                "method": "GET",
+                "detection": 'content="website">'
+            }
+        ]
+    },
+    "lastfm": {
+        "name": "Last.fm",
+        "checks": [
+            {
+                "url": "https://www.last.fm/user/{}",
+                "method": "GET",
+                "detection": '404 - Page Not Found'
             }
         ]
     },
