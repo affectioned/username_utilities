@@ -70,11 +70,12 @@ def read_usernames_from_file(filename):
         with open(file_path, "r", encoding="utf-8") as file:
             usernames = file.readlines()
             print(f"Usernames to check: {len(usernames)}")
+        
         # Filter and process usernames
         valid_usernames = [
             username.strip().lower()
             for username in usernames
-            if len(username.strip()) >= 3 and
+            if 3 <= len(username.strip()) <= 12 and  # Enforce length limit
                re.match("^[A-Za-z]+$", username.strip()) and
                " " not in username.strip()
         ]
@@ -88,7 +89,7 @@ def read_usernames_from_file(filename):
     except FileNotFoundError:
         print(f"File '{filename}' not found. Generating random usernames.")
         char_length = int(input("Enter length of characters: ").strip())
-        return [generate_random_username(char_length) for _ in range(50)]
+        return [generate_random_username(char_length) for _ in range(500)]
     
 def create_indexed_usernames(usernames):
     return [(index, user) for index, user in enumerate(usernames)]
