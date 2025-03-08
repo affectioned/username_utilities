@@ -123,7 +123,7 @@ platforms = {
         "name": "Pinterest",
         "checks": [
             {
-                "url": "https://pinterest.com/resource/UserResource/get/?source_url=%25{}%2F&data=%7B%22options%22%3A%7B%22field_set_key%22%3A%22profile%22%2C%22username%22%3A%22{}%22%2C%22is_mobile_fork%22%3Atrue%7D%2C%22context%22%3A%7B%7D%7D&_=1640428319046",
+                "url": "https://www.pinterest.com/{}",
                 "detection": "User not found.",
                 "method": "GET"
             }
