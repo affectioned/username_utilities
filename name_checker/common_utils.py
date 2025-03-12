@@ -1,8 +1,8 @@
+import requests
 import string
 import random
 import os
 import re
-import requests
 
 def filter_vulgar_words(words):
     """
@@ -75,7 +75,7 @@ def read_usernames_from_file(filename):
         valid_usernames = [
             username.strip().lower()
             for username in usernames
-            if 3 <= len(username.strip()) <= 12 and  # Enforce length limit
+            if 4 <= len(username.strip()) <= 12 and  # Enforce length limit
                re.match("^[A-Za-z]+$", username.strip()) and
                " " not in username.strip()
         ]

@@ -228,6 +228,16 @@ platforms = {
             }
         ]
     },
+    "nightlightgg": {
+        "name": "nightlight.gg",
+        "checks": [
+            {
+                "url": "https://nightlight.gg/u/{}/stats",
+                "method": "GET",
+                "detection": "This profile doesn't seem to exist, are you sure you've got the right username?"
+            }
+        ]
+    },
     "exit": {
         "name": "Exit",
         "checks": []
