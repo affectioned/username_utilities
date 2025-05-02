@@ -45,7 +45,5 @@ def filter_words(input_file):
     except Exception as e:
         print(f"An error occurred: {e}")
 
-# Example usage
 if __name__ == "__main__":
-    input_file = input("Enter the path to the input .txt file: ").strip()
-    filter_words(input_file)
+    filter_words("hits.txt")

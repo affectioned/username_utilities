@@ -77,7 +77,7 @@ if __name__ == "__main__":
 
     try:
         with tqdm(total=total_count, desc="Checking usernames", unit="user") as pbar:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
                 # Submit tasks individually
                 future_to_user = {
                     executor.submit(
