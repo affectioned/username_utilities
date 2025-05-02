@@ -1,6 +1,7 @@
 import os
 import requests
 import httpx
+from playwright_stealth import stealth_sync
 from playwright.sync_api import sync_playwright
 from fake_headers import Headers
 from dotenv import load_dotenv
@@ -92,6 +93,8 @@ def debug_playwright_response(url, proxy_config):
             browser = chromium.launch(headless=False, proxy=proxy_config)
             context = browser.new_context(locale='en-US')
             page = context.new_page()
+
+            stealth_sync(page)
 
             # Navigate to the URL
             response = page.goto(url, wait_until="load", timeout=60000)
