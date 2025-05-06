@@ -1,36 +1,15 @@
-import requests
+from profanity_check import predict
 import string
 import random
 import os
 import re
 
 def filter_vulgar_words(words):
-    """
-    Filters out vulgar words from a list of words using an online vulgar words list.
-
-    Parameters:
-    words (list): A list of words to filter.
-
-    Returns:
-    list: A filtered list of words without vulgarisms.
-    """
-    # URL of the vulgar words list
-    vulgar_words_url = "https://www.cs.cmu.edu/~biglou/resources/bad-words.txt"
-    
-    try:
-        # Fetch the list of vulgar words
-        response = requests.get(vulgar_words_url)
-        response.raise_for_status()  # Raise an error for unsuccessful requests
-        vulgarisms = set(response.text.splitlines())
-        
-        # Filter out words that match any vulgarism (case-insensitive)
-        filtered_words = [word for word in words if word.lower() not in vulgarisms]
-        
-        return filtered_words
-    
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching vulgar words list: {e}")
-        return words  # Return the original list if fetching fails
+    filtered_words = []
+    for word in words:
+        if not predict([word])[0]:
+            filtered_words.append(word)
+    return filtered_words
 
 def generate_random_username(length):
     if length < 1:

@@ -55,6 +55,8 @@ platforms = {
     "twitter": {
         "name": "Twitter",
         "checks": [
+            {"url": "https://nitter.poast.org/{}",
+                "detection": "not found</span>", "method": "GET"},
             {"url": "https://nitter.net/{}",
                 "detection": "not found</span>", "method": "GET"}
         ]
