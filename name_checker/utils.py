@@ -97,7 +97,7 @@ def debug_playwright_response(url, proxy_config):
             stealth_sync(page)
 
             # Navigate to the URL
-            response = page.goto(url, wait_until="load", timeout=60000)
+            response = page.goto(url, wait_until="networkidle", timeout=60000)
             page_content = page.content()
 
             print(f"URL: {url}")

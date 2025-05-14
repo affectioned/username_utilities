@@ -74,8 +74,6 @@ def check_with_httpx(user, checks, proxy_config, max_retries=3, rate_limit_pause
                 if status_code == 429:
                     retry_after = int(response.headers.get(
                         "Retry-After", rate_limit_pause))
-                    print(
-                        f"[!] Rate limited for {url}. Retrying after {retry_after} seconds...")
                     time.sleep(retry_after)
                     continue
 
@@ -185,8 +183,6 @@ def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pa
                 if status_code == 429:
                     retry_after = int(response.headers.get(
                         "Retry-After", rate_limit_pause))
-                    print(f"[!] Rate limited for {url}. Retrying after {
-                          retry_after} seconds...")
                     time.sleep(retry_after)
                     continue
 
@@ -263,15 +259,13 @@ def check_with_playwright(user, checks, proxy_config, max_retries=3, rate_limit_
                     stealth_sync(page)
 
                     # Navigate to the URL
-                    response = page.goto(url, wait_until="load", timeout=60000)
+                    response = page.goto(url)
                     page_content = page.content()
 
                     # Handle rate limiting (429 Too Many Requests)
                     if response.status == 429:
                         retry_after = int(response.headers.get(
                             "Retry-After", rate_limit_pause))
-                        print(
-                            f"[!] Rate limited for {url}. Retrying after {retry_after} seconds...")
                         time.sleep(retry_after)
                         continue  # Retry after waiting
 

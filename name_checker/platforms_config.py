@@ -58,7 +58,9 @@ platforms = {
             {"url": "https://nitter.poast.org/{}",
                 "detection": "not found</span>", "method": "GET"},
             {"url": "https://nitter.net/{}",
-                "detection": "not found</span>", "method": "GET"}
+                "detection": "not found</span>", "method": "GET"},
+            {"url": "https://api.twitter.com/i/users/username_available.json?username={}",
+             "detection": '{"valid":true,"reason":"available","msg":"Disponibile!","desc":"Disponibile!"}'}
         ]
     },
     "steam_groups": {
