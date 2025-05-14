@@ -94,8 +94,6 @@ def check_with_httpx(user, checks, proxy_config, max_retries=3, rate_limit_pause
 
             except httpx.RequestError as e:
                 retries += 1
-                print(
-                    f"[!] Error accessing {url} (Attempt {retries}/{max_retries}): {e}")
                 time.sleep(10)
 
         if retries == max_retries:
@@ -203,8 +201,6 @@ def check_with_requests(user, checks, proxy_config, max_retries=3, rate_limit_pa
 
             except requests.exceptions.RequestException as e:
                 retries += 1
-                print(f"[!] Error accessing {
-                      url} (Attempt {retries}/{max_retries}): {e}")
                 time.sleep(10)
 
         if retries == max_retries:
@@ -288,8 +284,6 @@ def check_with_playwright(user, checks, proxy_config, max_retries=3, rate_limit_
 
             except Exception as e:
                 retries += 1
-                print(
-                    f"[!] Error accessing {url} (Attempt {retries}/{max_retries}): {e}")
                 time.sleep(10)  # Wait before retrying
 
         if retries == max_retries:
