@@ -62,35 +62,47 @@ def select_platform():
     print("Invalid choice. Please try again.")
     return select_platform()
 
-
 if __name__ == "__main__":
-    # Select the platform to check usernames
     selected_platform = select_platform()
     print(f"- Selected platform: {selected_platform['name']}")
     print(f"- Checks to perform: {selected_platform['checks']}")
 
-    # Load usernames to check
-    usernames = common_utils.load_usernames()
-    total_count = len(usernames)
+    words_choice = input("\nDo you wanna use online words list or local? (e.g., online, local): ").lower()
 
+    while words_choice not in ("local", "online"):
+        print("Invalid choice. Please try again.")
+        words_choice = input("Do you wanna use online words list or local? (e.g., online, local): ").lower()
+
+    usernames = []
+    if words_choice == "local":
+        usernames = common_utils.load_usernames()
+    elif words_choice == "online":
+        usernames = common_utils.load_github_usernames("LabyMod", "og-names", "src")
+
+    if not usernames:
+        print("[!] No usernames loaded. Aborting.")
+        exit(1)
+
+    usernames.sort()
+
+    total_count = len(usernames)
+    print(f"\nLoaded {total_count} usernames")
     print("Starting username checks...")
 
     try:
         with tqdm(total=total_count, desc="Checking usernames", unit="user") as pbar:
             with concurrent.futures.ThreadPoolExecutor(max_workers=12) as executor:
-                # Submit tasks individually
                 future_to_user = {
-                    executor.submit(
-                        check_username, user, selected_platform, pbar
-                    ): user for user in usernames
+                    executor.submit(check_username, user, selected_platform, pbar): user
+                    for user in usernames
                 }
 
                 for future in concurrent.futures.as_completed(future_to_user):
                     user = future_to_user[future]
                     try:
-                        future.result()  # This raises any exception that occurred in the thread
+                        future.result()
                     except Exception as e:
-                        pbar.write(f"[!] Error occurred while checking {user}: {e}")
+                        pbar.write(f"[!] Failed: {user} | Reason: {e}")
 
     except Exception as e:
         print(f"[!] An error occurred during execution: {e}")

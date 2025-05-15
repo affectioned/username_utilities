@@ -1,4 +1,5 @@
 from profanity_check import predict
+import requests
 import string
 import random
 import os
@@ -65,6 +66,7 @@ def read_usernames_from_file(filename):
         # Shuffle the usernames
         random.shuffle(sanitized_usernames)
         return sanitized_usernames
+    
     except FileNotFoundError:
         print(f"File '{filename}' not found. Generating random usernames.")
         char_length = int(input("Enter length of characters: ").strip())
@@ -72,3 +74,47 @@ def read_usernames_from_file(filename):
     
 def create_indexed_usernames(usernames):
     return [(index, user) for index, user in enumerate(usernames)]
+
+def _get_txt_files_recursive(owner: str, repo: str, path: str) -> list[dict]:
+    url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+    resp = requests.get(url)
+    resp.raise_for_status()
+    items = resp.json()
+
+    txt_files = []
+    for item in items:
+        if item["type"] == "file" and item["name"].endswith(".txt"):
+            txt_files.append(item)
+        elif item["type"] == "dir":
+            txt_files += _get_txt_files_recursive(owner, repo, item["path"])
+    return txt_files
+
+
+def load_github_usernames(owner: str, repo: str, base_path: str) -> list[str]:
+    """
+    Recursively loads .txt files from GitHub repo, prompts user for one,
+    returns a shuffled and sanitized list of usernames.
+    """
+    txt_files = _get_txt_files_recursive(owner, repo, base_path)
+    if not txt_files:
+        raise RuntimeError("No .txt files found.")
+
+    print("Available .txt files:")
+    for idx, file in enumerate(txt_files, start=1):
+        print(f"{idx}. {file['path']}")
+
+    while True:
+        choice = input(f"Select a file (1-{len(txt_files)}): ").strip()
+        if choice.isdigit() and 1 <= int(choice) <= len(txt_files):
+            selected = txt_files[int(choice) - 1]
+            break
+        print("Invalid selection, try again.")
+
+    raw_resp = requests.get(selected['download_url'])
+    raw_resp.raise_for_status()
+    usernames = raw_resp.text.splitlines()
+
+    # Filter out vulgar usernames
+    sanitized_usernames = filter_vulgar_words(usernames)
+
+    return sanitized_usernames
