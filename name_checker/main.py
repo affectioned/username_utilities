@@ -83,8 +83,6 @@ if __name__ == "__main__":
         print("[!] No usernames loaded. Aborting.")
         exit(1)
 
-    usernames.sort()
-
     total_count = len(usernames)
     print(f"\nLoaded {total_count} usernames")
     print("Starting username checks...")
