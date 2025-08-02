@@ -23,21 +23,6 @@ This repository contains two Python scripts:
 
 A Python script to check username availability across various platforms using Playwright or HTTP requests.
 
-  
-
-### Features
-
-  
-
-- Supports multiple platforms (e.g., Epic Games, Instagram, Twitter, YouTube, etc.).
-
-- Logs available usernames.
-
-- Utilizes proxy configuration for enhanced privacy.
-
-- Displays a progress bar for tracking checks.
-
-  
 
 ### Requirements
 
@@ -46,11 +31,6 @@ A Python script to check username availability across various platforms using Pl
 - Python 3+
 
 - Required Python packages (install with pip):
-
-```bash
-pip install -r requirements.txt
-```
-
   
 
 ### Usage
@@ -64,6 +44,7 @@ git clone https://github.com/affectioned/username_utilities.git
 
 cd username_utilities
 ```
+or download the repository directly from github
 
   
 
@@ -81,19 +62,11 @@ pip install -r requirements.txt
 python main.py
 ```
 
-  
-
-4.  **Follow the prompts to select a platform and start checking usernames.**
-
-  
-
 ### Configuration
 
-  
+
 
 -  **Platforms**: Edit the `platforms_config.py` file to add or modify platform checks.
-
--  **Proxy Settings**: Customize proxy configuration in `proxy_manager.py`.
 
   
 
@@ -140,19 +113,6 @@ Checking usernames: ████████████████ 100%
   
 
 A Python script to generate variations of a word by replacing characters with visually similar Unicode characters (e.g., Cyrillic, Greek).
-
-  
-
-### Features
-
-  
-
-- Creates variations of a word using visually similar Unicode characters.
-
-- Generates variations in stages, with each stage having a different number of character replacements.
-
-- Useful for testing Unicode normalization or identifying lookalike text.
-
   
 
 ### Usage
@@ -172,11 +132,6 @@ python generator.py
 ```plaintext
 Enter a word: example
 ```
-
-  
-
-3.  **View the generated variations:** Variations will be displayed in stages, with each stage representing the number of replaced characters.
-
   
 
 ### Example Output
@@ -232,20 +187,6 @@ Variations with 4 character(s) replaced:
 
 [15] ΤеѕΤ
 ```
-
-  
-
-### Configuration
-
-  
-
--  **Unicode Map**: The `unicode_map` dictionary defines the character replacements. You can extend or modify it to include additional mappings.
-
-  
-
----
-
-  
 
 ## License
 
